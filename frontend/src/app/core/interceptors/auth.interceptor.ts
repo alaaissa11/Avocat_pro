@@ -2,6 +2,7 @@ import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = localStorage.getItem('avocat_pro_token');
+  console.log('Interceptor - Token found:', !!token);
 
   if (token) {
     const cloned = req.clone({

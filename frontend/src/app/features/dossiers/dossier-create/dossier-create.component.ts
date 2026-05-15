@@ -1,12 +1,24 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { DossierService } from '../../../core/services/dossier.service';
+import { ClientService, Client } from '../../../core/services/client.service';
+import { TypeAffaire } from '../../../core/models/dossier.model';
+import { ClientCreateComponent } from '../../clients/client-create/client-create.component';
+import { EventEmitter, Output } from '@angular/core';
+
+interface ClientSearchResult {
+  _id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+}
 
 @Component({
   selector: 'app-dossier-create',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ClientCreateComponent],
   template: `
     <div class="max-w-4xl mx-auto animate-fade-in">
       <!-- Header -->
@@ -21,35 +33,10 @@ import { Router, RouterLink } from '@angular/router';
 
       <!-- Form Card -->
       <form (ngSubmit)="onSubmit()" class="card">
-        <!-- AI Suggestion Banner -->
-        @if (aiSuggestion()) {
-          <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4 mb-6 animate-slide-up">
-            <div class="flex items-start gap-3">
-              <span class="material-icons text-amber-600 mt-0.5">auto_awesome</span>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-amber-800">Suggestion IA basée sur votre description</p>
-                <p class="text-sm text-amber-700 mt-1">
-                  Type suggéré: <strong>{{ aiSuggestion()!.type }}</strong>
-                  <span class="mx-2">•</span>
-                  Confiance: <strong>{{ aiSuggestion()!.confidence }}%</strong>
-                </p>
-                <button
-                  type="button"
-                  (click)="applyAiSuggestion()"
-                  class="mt-2 text-sm text-amber-700 hover:text-amber-800 font-medium flex items-center gap-1"
-                >
-                  <span class="material-icons text-sm">check</span>
-                  Appliquer cette suggestion
-                </button>
-              </div>
-              <button
-                type="button"
-                (click)="clearAiSuggestion()"
-                class="text-amber-400 hover:text-amber-600"
-              >
-                <span class="material-icons text-sm">close</span>
-              </button>
-            </div>
+        @if (error()) {
+          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
+            <span class="material-icons text-sm">error</span>
+            {{ error() }}
           </div>
         }
 
@@ -67,9 +54,9 @@ import { Router, RouterLink } from '@angular/router';
                 placeholder="Rechercher un client..."
                 class="input-field pl-10"
               >
-              @if (searchResults().length > 0) {
-                <div class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-card max-h-48 overflow-y-auto">
-                  @for (client of searchResults(); track client.id) {
+              @if (searchResults().length > 0 && searchClient.length > 0) {
+                <div class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-card max-h-60 overflow-y-auto">
+                  @for (client of searchResults(); track client._id) {
                     <button
                       type="button"
                       (click)="selectClient(client)"
@@ -84,11 +71,26 @@ import { Router, RouterLink } from '@angular/router';
                   }
                 </div>
               }
+              @if (searchClient.length > 0 && searchResults().length === 0) {
+                <div class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-card">
+                  <div class="p-4 text-center">
+                    <p class="text-sm text-slate-500 mb-3">Aucun client trouvé</p>
+                    <button
+                      type="button"
+                      (click)="createNewClient()"
+                      class="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      <span class="material-icons text-sm">person_add</span>
+                      Créer un nouveau client
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
             @if (selectedClient()) {
               <div class="flex items-center gap-2 mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <span class="material-icons text-green-600 text-sm">check_circle</span>
-                <span class="text-sm text-green-700">{{ selectedClient()!.nom }} {{ selectedClient()!.prenom }}</span>
+                <span class="text-sm text-green-700">{{ selectedClient()?.nom }} {{ selectedClient()?.prenom || '' }}</span>
                 <button type="button" (click)="clearClient()" class="ml-auto text-green-600 hover:text-green-700">
                   <span class="material-icons text-sm">close</span>
                 </button>
@@ -109,60 +111,32 @@ import { Router, RouterLink } from '@angular/router';
             >
           </div>
 
-          <!-- Description (Trigger AI) -->
+          <!-- Description -->
           <div class="md:col-span-2">
             <label class="block text-sm font-medium text-slate-700 mb-2">Description détaillée</label>
             <textarea
               [(ngModel)]="dossier.description"
               name="description"
-              (blur)="onDescriptionBlur()"
               rows="4"
-              placeholder="Décrivez l'affaire en détail pour permettre à l'IA de suggérer la catégorie..."
+              placeholder="Décrivez l'affaire en détail..."
               class="input-field resize-none"
             ></textarea>
-            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
-              <span class="material-icons text-xs">auto_awesome</span>
-              L'IA analysera votre description pour suggérer le type d'affaire
-            </p>
           </div>
 
-          <!-- Type d'Affaire (AI Predictive) -->
+          <!-- Type d'Affaire -->
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">Type d'affaire *</label>
-            <div class="relative">
-              <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">category</span>
-              <input
-                type="text"
-                [(ngModel)]="dossier.typeAffaire"
-                name="typeAffaire"
-                (input)="onTypeSearch()"
-                placeholder="Tapez pour rechercher..."
-                class="input-field pl-10"
-              >
-              @if (showTypeSuggestions()) {
-                <div class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-card max-h-48 overflow-y-auto">
-                  @for (type of typeSuggestions(); track type.code) {
-                    <button
-                      type="button"
-                      (click)="selectType(type)"
-                      class="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 border-b border-slate-100 last:border-0 transition-colors"
-                    >
-                      <span class="material-icons text-lawyer-accent text-sm">label</span>
-                      <div class="flex-1">
-                        <p class="font-medium text-slate-800">{{ type.label }}</p>
-                        <p class="text-xs text-slate-500">{{ type.code }}</p>
-                      </div>
-                      @if (type.ia) {
-                        <span class="badge badge-info text-xs">
-                          <span class="material-icons text-xs mr-1">auto_awesome</span>
-                          IA
-                        </span>
-                      }
-                    </button>
-                  }
-                </div>
+            <select
+              [(ngModel)]="dossier.typeAffaire"
+              name="typeAffaire"
+              class="select-field"
+              required
+            >
+              <option value="">Sélectionnez un type...</option>
+              @for (type of typeAffaires; track type.code) {
+                <option [value]="type.code">{{ type.label }}</option>
               }
-            </div>
+            </select>
           </div>
 
           <!-- Sous-type -->
@@ -208,25 +182,74 @@ import { Router, RouterLink } from '@angular/router';
             >
           </div>
 
-          <!-- Notes -->
+          <!-- Juridiction -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Juridiction</label>
+            <input
+              type="text"
+              [(ngModel)]="dossier.juridiction"
+              name="juridiction"
+              placeholder="Tribunal de instance..."
+              class="input-field"
+            >
+          </div>
+
+          <!-- Adversaire -->
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-slate-700 mb-2">Notes internes</label>
-            <textarea
-              [(ngModel)]="dossier.notes"
-              name="notes"
-              rows="3"
-              placeholder="Notes privées pour l'équipe..."
-              class="input-field resize-none"
-            ></textarea>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Partie adverse</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input
+                type="text"
+                [(ngModel)]="dossier.adversary.nom"
+                name="adversaryNom"
+                placeholder="Nom de l'adversaire"
+                class="input-field"
+              >
+              <input
+                type="text"
+                [(ngModel)]="dossier.adversary.avocat"
+                name="adversaryAvocat"
+                placeholder="Avocat adverse"
+                class="input-field"
+              >
+              <input
+                type="email"
+                [(ngModel)]="dossier.adversary.email"
+                name="adversaryEmail"
+                placeholder="Email adverse"
+                class="input-field"
+              >
+            </div>
           </div>
         </div>
+
+        @if (showCreateClientModal()) {
+          <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-lawyer-dark">Nouveau Client</h3>
+                <button type="button" (click)="closeCreateClientModal()" class="text-slate-400 hover:text-slate-600">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+              <div class="p-6">
+                <app-client-create [isModal]="true" (clientCreated)="onClientCreated($event)"></app-client-create>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- Actions -->
         <div class="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-slate-100">
           <a routerLink="/dossiers" class="btn-secondary">Annuler</a>
-          <button type="submit" class="btn-primary flex items-center gap-2" [disabled]="!isFormValid()">
-            <span class="material-icons text-lg">save</span>
-            Créer le dossier
+          <button type="submit" class="btn-primary flex items-center gap-2" [disabled]="!isFormValid() || loading()">
+            @if (loading()) {
+              <span class="material-icons text-lg animate-spin">refresh</span>
+              Création en cours...
+            } @else {
+              <span class="material-icons text-lg">save</span>
+              Créer le dossier
+            }
           </button>
         </div>
       </form>
@@ -236,46 +259,80 @@ import { Router, RouterLink } from '@angular/router';
     .material-icons { font-size: 18px; }
   `]
 })
-export class DossierCreateComponent {
-  searchClient = '';
-  selectedClient = signal<{id: number; nom: string; prenom: string; email: string} | null>(null);
-  searchResults = signal<{id: number; nom: string; prenom: string; email: string}[]>([]);
-  aiSuggestion = signal<{type: string; confidence: number} | null>(null);
+export class DossierCreateComponent implements OnInit {
+  private dossierService = inject(DossierService);
+  private clientService = inject(ClientService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
-  showTypeSuggestions = signal(false);
-  typeSuggestions = signal<{code: string; label: string; ia?: boolean}[]>([]);
+  searchClient = '';
+  selectedClient = signal<Client | null>(null);
+  searchResults = signal<Client[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
+
+  showCreateClientModal = signal(false);
+  @Output() clientCreated = new EventEmitter<Client>();
 
   dossier = {
     titre: '',
     description: '',
-    typeAffaire: '',
+    typeAffaire: '' as TypeAffaire | '',
     sousType: '',
     priorite: 3,
     dateAudience: '',
-    notes: ''
+    juridiction: '',
+    adversary: {
+      nom: '',
+      avocat: '',
+      email: ''
+    }
   };
+
+  typeAffaires: {code: TypeAffaire; label: string}[] = [
+    { code: 'civil', label: 'Civil' },
+    { code: 'penal', label: 'Pénal' },
+    { code: 'commercial', label: 'Commercial' },
+    { code: 'travail', label: 'Travail' },
+    { code: 'famille', label: 'Famille' },
+    { code: 'administratif', label: 'Administratif' },
+    { code: 'immobilier', label: 'Immobilier' },
+    { code: 'bancaire', label: 'Bancaire' },
+    { code: 'autre', label: 'Autre' }
+  ];
 
   priorities = [
     { value: 1, label: 'Haute', icon: 'arrow_upward', iconClass: 'text-red-500', bgClass: 'bg-red-50 hover:border-red-200' },
+    { value: 2, label: 'Moyenne-Haute', icon: 'arrow_upward', iconClass: 'text-orange-500', bgClass: 'bg-orange-50 hover:border-orange-200' },
     { value: 3, label: 'Moyenne', icon: 'remove', iconClass: 'text-amber-500', bgClass: 'bg-amber-50 hover:border-amber-200' },
+    { value: 4, label: 'Moyenne-Basse', icon: 'arrow_downward', iconClass: 'text-lime-500', bgClass: 'bg-lime-50 hover:border-lime-200' },
     { value: 5, label: 'Basse', icon: 'arrow_downward', iconClass: 'text-green-500', bgClass: 'bg-green-50 hover:border-green-200' }
   ];
 
-  constructor(private router: Router) {}
+  ngOnInit() {
+    const clientId = this.route.snapshot.queryParamMap.get('clientId');
+    if (clientId) {
+      this.clientService.getClientById(clientId).subscribe({
+        next: (client) => {
+          this.selectedClient.set(client);
+        },
+        error: (err) => console.error('Error loading client:', err)
+      });
+    }
+  }
 
   onClientSearch() {
-    // Simuler recherche client
     if (this.searchClient.length > 2) {
-      this.searchResults.set([
-        { id: 1, nom: 'Smith', prenom: 'John', email: 'john.smith@email.com' },
-        { id: 2, nom: 'Benali', prenom: 'Fatima', email: 'fatima.benali@email.com' }
-      ]);
+      this.clientService.getClients({ search: this.searchClient, limit: 10 }).subscribe({
+        next: (response) => this.searchResults.set(response.clients),
+        error: (err) => console.error('Error searching clients:', err)
+      });
     } else {
       this.searchResults.set([]);
     }
   }
 
-  selectClient(client: {id: number; nom: string; prenom: string; email: string}) {
+  selectClient(client: Client) {
     this.selectedClient.set(client);
     this.searchClient = '';
     this.searchResults.set([]);
@@ -286,66 +343,56 @@ export class DossierCreateComponent {
     this.searchClient = '';
   }
 
-  onDescriptionBlur() {
-    // Simulation IA - appeler backend réel ici
-    if (this.dossier.description.length > 20) {
-      setTimeout(() => {
-        this.aiSuggestion.set({
-          type: 'Civil - Responsabilité Médicale',
-          confidence: 87
-        });
-      }, 500);
-    }
+  createNewClient() {
+    this.showCreateClientModal.set(true);
   }
 
-  applyAiSuggestion() {
-    if (this.aiSuggestion()) {
-      this.dossier.typeAffaire = this.aiSuggestion()!.type;
-      this.clearAiSuggestion();
-    }
+  closeCreateClientModal() {
+    this.showCreateClientModal.set(false);
   }
 
-  clearAiSuggestion() {
-    this.aiSuggestion.set(null);
-  }
-
-  onTypeSearch() {
-    const query = this.dossier.typeAffaire.toLowerCase();
-    const types = [
-      { code: 'CIVIL', label: 'Civil', ia: false },
-      { code: 'CIV-RESP', label: 'Civil - Responsabilité Médicale', ia: true },
-      { code: 'CIV-IMMO', label: 'Civil - Immobilier', ia: true },
-      { code: 'PENAL', label: 'Pénal', ia: false },
-      { code: 'PEN-VOL', label: 'Pénal - Vol', ia: true },
-      { code: 'COM', label: 'Commercial', ia: false },
-      { code: 'TRAV', label: 'Travail', ia: false },
-      { code: 'FAM', label: 'Famille', ia: false }
-    ];
-
-    this.typeSuggestions.set(
-      types.filter(t => t.label.toLowerCase().includes(query))
-    );
-    this.showTypeSuggestions.set(true);
-  }
-
-  selectType(type: {code: string; label: string}) {
-    this.dossier.typeAffaire = type.label;
-    this.showTypeSuggestions.set(false);
+  onClientCreated(client: Client) {
+    this.selectClient(client);
+    this.showCreateClientModal.set(false);
   }
 
   isFormValid(): boolean {
+    const validTypes = ['civil', 'penal', 'commercial', 'travail', 'famille', 'administratif', 'immobilier', 'bancaire', 'autre'];
     return !!(
       this.selectedClient() &&
       this.dossier.titre &&
-      this.dossier.typeAffaire
+      this.dossier.typeAffaire &&
+      validTypes.includes(this.dossier.typeAffaire)
     );
   }
 
   onSubmit() {
-    console.log('Création dossier:', {
-      ...this.dossier,
-      clientId: this.selectedClient()?.id
+    if (!this.isFormValid()) return;
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    const dossierData: any = {
+      titre: this.dossier.titre,
+      description: this.dossier.description,
+      typeAffaire: this.dossier.typeAffaire,
+      sousType: this.dossier.sousType,
+      priorite: this.dossier.priorite,
+      juridiction: this.dossier.juridiction,
+      adversary: this.dossier.adversary,
+      clientId: this.selectedClient()?._id,
+      dateAudience: this.dossier.dateAudience ? new Date(this.dossier.dateAudience).toISOString() : undefined
+    };
+
+    this.dossierService.createDossier(dossierData).subscribe({
+      next: (created) => {
+        this.loading.set(false);
+        this.router.navigate(['/dossiers', created._id]);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(err.error?.message || 'Erreur lors de la création du dossier');
+      }
     });
-    this.router.navigate(['/dossiers']);
   }
 }

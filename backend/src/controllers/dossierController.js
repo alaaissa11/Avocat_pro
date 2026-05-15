@@ -4,6 +4,10 @@ const iaService = require('../services/iaService');
 
 exports.createDossier = async (req, res) => {
   try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
     const dossier = new Dossier({ ...req.body, createdBy: req.user._id });
 
     if (dossier.description) {

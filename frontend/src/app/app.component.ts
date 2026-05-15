@@ -20,7 +20,9 @@ import { AuthService } from './core/services/auth.service';
           </main>
         </div>
       } @else {
-        <router-outlet />
+        <div class="w-full min-h-screen flex justify-center items-center">
+          <router-outlet />
+        </div>
       }
     </div>
   `

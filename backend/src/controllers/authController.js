@@ -2,23 +2,39 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const jwtConfig = require('../config/jwt');
 
+const defaultPermissions = {
+  admin: ['read', 'write', 'delete', 'manage_users', 'manage_dossiers', 'manage_clients', 'view_stats'],
+  avocat: ['read', 'write', 'delete', 'manage_dossiers', 'manage_clients', 'view_stats'],
+  assistant: ['read', 'write', 'manage_dossiers', 'manage_clients'],
+  secretaire: ['read', 'manage_clients']
+};
+
 exports.register = async (req, res) => {
   try {
     const { email, password, nom, prenom, role, telephone } = req.body;
-    
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    const user = new User({ email, password, nom, prenom, role, telephone });
+    const userRole = role || 'assistant';
+    const user = new User({
+      email,
+      password,
+      nom,
+      prenom,
+      role: userRole,
+      telephone,
+      permissions: defaultPermissions[userRole] || ['read']
+    });
     await user.save();
 
     const token = jwt.sign({ userId: user._id }, jwtConfig.secret, { expiresIn: jwtConfig.expiresIn });
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user._id, email, nom, prenom, role },
+      user: { id: user._id, email, nom, prenom, role: userRole, permissions: user.permissions },
       token
     });
   } catch (error) {

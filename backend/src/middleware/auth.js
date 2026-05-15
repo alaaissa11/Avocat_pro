@@ -5,7 +5,7 @@ const User = require('../models/User');
 const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({ message: 'Authentication required' });
     }
@@ -13,14 +13,21 @@ const auth = async (req, res, next) => {
     const decoded = jwt.verify(token, jwtConfig.secret);
     const user = await User.findById(decoded.userId).select('-password');
 
-    if (!user || !user.isActive) {
-      return res.status(401).json({ message: 'User not found or inactive' });
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({ message: 'Account is deactivated' });
     }
 
     req.user = user;
     req.token = token;
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token expired' });
+    }
     res.status(401).json({ message: 'Invalid token' });
   }
 };
@@ -36,8 +43,11 @@ const authorize = (...roles) => {
 
 const checkPermission = (permission) => {
   return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
     if (req.user.role === 'admin') return next();
-    if (!req.user.permissions.includes(permission)) {
+    if (!req.user.permissions || !req.user.permissions.includes(permission)) {
       return res.status(403).json({ message: 'Permission denied' });
     }
     next();
