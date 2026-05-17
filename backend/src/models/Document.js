@@ -5,7 +5,7 @@ const documentSchema = new mongoose.Schema({
   description: { type: String },
   type: {
     type: String,
-    enum: ['contrat', 'decision', 'requete', 'piece_jointe', 'correspondence', 'facture', 'autre'],
+    enum: ['contrat', 'plainte', 'facture', 'pouvoir', 'jugement', 'correspondance', 'decision', 'requete', 'piece_jointe', 'autre'],
     default: 'autre'
   },
   mimeType: { type: String },

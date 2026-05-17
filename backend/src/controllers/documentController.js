@@ -11,11 +11,17 @@ if (!fs.existsSync(uploadDir)) {
 
 exports.uploadDocument = async (req, res) => {
   try {
+    console.log('[Document] Requête reçue');
+    console.log('[Document] File:', req.file ? req.file.originalname : 'Aucun fichier');
+    console.log('[Document] Body:', req.body);
+    
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
     const { dossierId, clientId, description, type, estPrive, tags } = req.body;
+
+    console.log('[Document] Données:', { dossierId, clientId, description, type });
 
     const document = new Document({
       nom: req.file.originalname,
@@ -24,8 +30,8 @@ exports.uploadDocument = async (req, res) => {
       mimeType: req.file.mimetype,
       chemin: req.file.path,
       taille: req.file.size,
-      dossierId,
-      clientId,
+      dossierId: dossierId || undefined,
+      clientId: clientId || undefined,
       uploadedBy: req.user._id,
       estPrive: estPrive === 'true',
       tags: tags ? JSON.parse(tags) : []
