@@ -3,8 +3,10 @@ const Operation = require('../models/Operation');
 
 exports.createClient = async (req, res) => {
   try {
+    console.log('[Client] Données reçues:', JSON.stringify(req.body, null, 2));
     const client = new Client({ ...req.body, createdBy: req.user._id });
     await client.save();
+    console.log('[Client] Créé avec succès:', client._id);
 
     await new Operation({
       type: 'client_cree',
@@ -17,6 +19,7 @@ exports.createClient = async (req, res) => {
 
     res.status(201).json(client);
   } catch (error) {
+    console.error('[Client] Erreur création:', error);
     res.status(500).json({ message: 'Error creating client', error: error.message });
   }
 };

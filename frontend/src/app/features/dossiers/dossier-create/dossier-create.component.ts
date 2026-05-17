@@ -129,8 +129,9 @@ interface ClientSearchResult {
             <select
               [(ngModel)]="dossier.typeAffaire"
               name="typeAffaire"
-              class="select-field"
+              class="select-field modern-select"
               required
+              style="border-radius: 12px; border: 2px solid #e2e8f0; padding: 10px 40px 10px 16px; font-size: 14px; font-weight: 500; color: #334155; background: white url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236b7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222.5%22%20d%3D%22M19%209l-7%207-7-7%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E') no-repeat right 12px center/20px; appearance: none; -webkit-appearance: none; -moz-appearance: none; transition: all 0.2s;"
             >
               <option value="">Sélectionnez un type...</option>
               @for (type of typeAffaires; track type.code) {
@@ -142,7 +143,12 @@ interface ClientSearchResult {
           <!-- Sous-type -->
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">Sous-type</label>
-            <select [(ngModel)]="dossier.sousType" name="sousType" class="select-field">
+            <select 
+              [(ngModel)]="dossier.sousType" 
+              name="sousType" 
+              class="select-field modern-select"
+              style="border-radius: 12px; border: 2px solid #e2e8f0; padding: 10px 40px 10px 16px; font-size: 14px; font-weight: 500; color: #334155; background: white url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236b7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222.5%22%20d%3D%22M19%209l-7%207-7-7%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E') no-repeat right 12px center/20px; appearance: none; -webkit-appearance: none; -moz-appearance: none; transition: all 0.2s;"
+            >
               <option value="">Sélectionnez...</option>
               <option value="contentieux">Contentieux</option>
               <option value="consultation">Consultation</option>
@@ -173,14 +179,94 @@ interface ClientSearchResult {
 
           <!-- Date Audience -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Date d'audience</label>
-            <input
-              type="date"
-              [(ngModel)]="dossier.dateAudience"
-              name="dateAudience"
-              class="input-field"
-            >
+            <label class="block text-sm font-medium text-slate-700 mb-2">Date et heure d'audience</label>
+            <div class="flex gap-2 items-center">
+              <input
+                type="date"
+                [(ngModel)]="dossier.dateAudience"
+                name="dateAudience"
+                class="input-field flex-1"
+              >
+              <button
+                type="button"
+                (click)="openTimePicker('debut')"
+                class="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                [ngClass]="dossier.heureDebut ? 'bg-lawyer-primary/10 border-lawyer-primary' : 'bg-white'"
+              >
+                <span class="material-icons text-lawyer-primary text-sm">schedule</span>
+                <span class="text-sm text-slate-700">{{ dossier.heureDebut || 'Début' }}</span>
+              </button>
+              <span class="text-slate-400">-</span>
+              <button
+                type="button"
+                (click)="openTimePicker('fin')"
+                class="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                [ngClass]="dossier.heureFin ? 'bg-lawyer-primary/10 border-lawyer-primary' : 'bg-white'"
+              >
+                <span class="material-icons text-lawyer-primary text-sm">schedule</span>
+                <span class="text-sm text-slate-700">{{ dossier.heureFin || 'Fin' }}</span>
+              </button>
+            </div>
           </div>
+
+          <!-- Time Picker Modal -->
+          @if (showTimePicker()) {
+            <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fade-in" (click)="closeTimePicker()">
+              <div class="bg-white rounded-xl shadow-xl w-72 animate-scale-in" (click)="$event.stopPropagation()">
+                <div class="bg-lawyer-primary text-white px-4 py-3 rounded-t-xl">
+                  <div class="flex items-center justify-between">
+                    <span class="font-medium text-sm">{{ timePickerType() === 'debut' ? 'Heure de début' : 'Heure de fin' }}</span>
+                    <button (click)="closeTimePicker()" class="text-white/80 hover:text-white">
+                      <span class="material-icons text-lg">close</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center justify-center gap-3 mb-4">
+                    <div class="text-center">
+                      <label class="block text-[10px] text-slate-500 mb-1 uppercase">Heure</label>
+                      <div class="flex flex-col gap-0.5 max-h-32 overflow-y-auto">
+                        @for (h of hours; track h) {
+                          <button
+                            type="button"
+                            (click)="selectedHourValue = h"
+                            class="w-12 py-1 text-xs rounded transition-colors"
+                            [ngClass]="selectedHourValue === h ? 'bg-lawyer-primary text-white' : 'hover:bg-slate-100 text-slate-700'"
+                          >
+                            {{ h }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                    <span class="text-xl font-bold text-slate-300">:</span>
+                    <div class="text-center">
+                      <label class="block text-[10px] text-slate-500 mb-1 uppercase">Minute</label>
+                      <div class="flex flex-col gap-0.5">
+                        @for (m of minutes; track m) {
+                          <button
+                            type="button"
+                            (click)="selectedMinuteValue = m"
+                            class="w-12 py-1 text-xs rounded transition-colors"
+                            [ngClass]="selectedMinuteValue === m ? 'bg-lawyer-primary text-white' : 'hover:bg-slate-100 text-slate-700'"
+                          >
+                            {{ m }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="button" (click)="closeTimePicker()" class="flex-1 px-3 py-1.5 text-xs border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50">
+                      Annuler
+                    </button>
+                    <button type="button" (click)="confirmTime()" class="flex-1 px-3 py-1.5 text-xs bg-lawyer-primary text-white rounded-lg hover:bg-lawyer-dark">
+                      Confirmer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
 
           <!-- Juridiction -->
           <div>
@@ -274,6 +360,14 @@ export class DossierCreateComponent implements OnInit {
   showCreateClientModal = signal(false);
   @Output() clientCreated = new EventEmitter<Client>();
 
+  showTimePicker = signal(false);
+  timePickerType = signal<'debut' | 'fin'>('debut');
+  selectedHourValue = '09';
+  selectedMinuteValue = '00';
+
+  hours = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'];
+  minutes = ['00', '15', '30', '45'];
+
   dossier = {
     titre: '',
     description: '',
@@ -281,6 +375,8 @@ export class DossierCreateComponent implements OnInit {
     sousType: '',
     priorite: 3,
     dateAudience: '',
+    heureDebut: '',
+    heureFin: '',
     juridiction: '',
     adversary: {
       nom: '',
@@ -381,7 +477,7 @@ export class DossierCreateComponent implements OnInit {
       juridiction: this.dossier.juridiction,
       adversary: this.dossier.adversary,
       clientId: this.selectedClient()?._id,
-      dateAudience: this.dossier.dateAudience ? new Date(this.dossier.dateAudience).toISOString() : undefined
+      dateAudience: this.dossier.dateAudience ? this.formatDateWithTime(this.dossier.dateAudience, this.dossier.heureDebut, this.dossier.heureFin) : undefined
     };
 
     this.dossierService.createDossier(dossierData).subscribe({
@@ -394,5 +490,53 @@ export class DossierCreateComponent implements OnInit {
         this.error.set(err.error?.message || 'Erreur lors de la création du dossier');
       }
     });
+  }
+
+  formatDateWithTime(date: string, heureDebut: string, heureFin: string): string {
+    const dateObj = new Date(date);
+    let dateTime: Date;
+    
+    if (heureDebut) {
+      const [hours, minutes] = heureDebut.split(':');
+      dateObj.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    }
+    
+    dateTime = new Date(dateObj);
+    return dateTime.toISOString();
+  }
+
+  openTimePicker(type: 'debut' | 'fin') {
+    this.timePickerType.set(type);
+    if (type === 'debut' && this.dossier.heureDebut) {
+      const [h, m] = this.dossier.heureDebut.split(':');
+      this.selectedHourValue = h;
+      this.selectedMinuteValue = m;
+    } else if (type === 'fin' && this.dossier.heureFin) {
+      const [h, m] = this.dossier.heureFin.split(':');
+      this.selectedHourValue = h;
+      this.selectedMinuteValue = m;
+    } else {
+      this.selectedHourValue = '09';
+      this.selectedMinuteValue = '00';
+    }
+    this.showTimePicker.set(true);
+  }
+
+  closeTimePicker() {
+    this.showTimePicker.set(false);
+  }
+
+  confirmTime() {
+    const time = `${this.selectedHourValue}:${this.selectedMinuteValue}`;
+    if (this.timePickerType() === 'debut') {
+      this.dossier.heureDebut = time;
+      if (!this.dossier.heureFin) {
+        const hour = parseInt(this.selectedHourValue) + 1;
+        this.dossier.heureFin = `${hour.toString().padStart(2, '0')}:${this.selectedMinuteValue}`;
+      }
+    } else {
+      this.dossier.heureFin = time;
+    }
+    this.closeTimePicker();
   }
 }

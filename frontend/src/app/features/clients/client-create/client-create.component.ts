@@ -264,8 +264,8 @@ export class ClientCreateComponent {
     this.error.set(null);
 
     const clientData: Partial<Client> = {
-      nom: this.client.type === 'particulier' ? this.client.nom : undefined,
-      prenom: this.client.type === 'particulier' ? this.client.prenom : this.client.prenom,
+      nom: this.client.type === 'particulier' ? this.client.nom : this.client.raisonSociale || this.client.nom,
+      prenom: this.client.type === 'particulier' ? this.client.prenom : undefined,
       raisonSociale: this.client.type === 'entreprise' ? this.client.raisonSociale : undefined,
       email: this.client.email,
       telephone: this.client.telephone,
