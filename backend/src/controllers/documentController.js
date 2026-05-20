@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Document = require('../models/Document');
 const Operation = require('../models/Operation');
 const fs = require('fs');
@@ -11,17 +12,32 @@ if (!fs.existsSync(uploadDir)) {
 
 exports.uploadDocument = async (req, res) => {
   try {
-    console.log('[Document] Requête reçue');
-    console.log('[Document] File:', req.file ? req.file.originalname : 'Aucun fichier');
-    console.log('[Document] Body:', req.body);
+    console.log('=== UPLOAD DOCUMENT START ===');
+    console.log('req.file:', req.file ? req.file.originalname : 'AUCUN FICHIER');
+    console.log('req.user:', req.user);
+    console.log('req.headers.authorization:', req.headers.authorization ? 'présent' : 'absent');
     
     if (!req.file) {
+      console.log('ERROR: No file uploaded');
       return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    if (!req.user || !req.user._id) {
+      console.log('ERROR: User not authenticated');
+      console.log('req.user:', req.user);
+      return res.status(401).json({ message: 'Utilisateur non connecté' });
     }
 
     const { dossierId, clientId, description, type, estPrive, tags } = req.body;
 
     console.log('[Document] Données:', { dossierId, clientId, description, type });
+
+    let parsedTags = [];
+    try {
+      parsedTags = tags ? JSON.parse(tags) : [];
+    } catch (e) {
+      console.log('[Document] Tags parsing error:', e.message);
+    }
 
     const document = new Document({
       nom: req.file.originalname,
@@ -30,27 +46,32 @@ exports.uploadDocument = async (req, res) => {
       mimeType: req.file.mimetype,
       chemin: req.file.path,
       taille: req.file.size,
-      dossierId: dossierId || undefined,
-      clientId: clientId || undefined,
+      dossierId: dossierId && dossierId !== 'undefined' ? new mongoose.Types.ObjectId(dossierId) : undefined,
+      clientId: clientId && clientId !== 'undefined' ? new mongoose.Types.ObjectId(clientId) : undefined,
       uploadedBy: req.user._id,
       estPrive: estPrive === 'true',
-      tags: tags ? JSON.parse(tags) : []
+      tags: parsedTags
     });
 
+    console.log('[Document] Saving with dossierId:', dossierId, 'type:', typeof dossierId);
+
     await document.save();
+    console.log('[Document] Document saved:', document._id);
 
     await new Operation({
       type: 'document_uploade',
       entiteType: 'document',
       entiteId: document._id,
       userId: req.user._id,
-      userEmail: req.user.email,
+      userEmail: req.user.email || '',
       details: `Document ${document.nom} uploaded`
     }).save();
 
+    console.log('[Document] Upload successful');
     res.status(201).json(document);
   } catch (error) {
-    res.status(500).json({ message: 'Error uploading document', error: error.message });
+    console.error('[Document] Error:', error);
+    res.status(500).json({ message: 'Error uploading document', error: error.message, stack: error.stack });
   }
 };
 
@@ -67,7 +88,10 @@ exports.getDocuments = async (req, res) => {
     }
 
     if (type) query.type = type;
-    if (dossierId) query.dossierId = dossierId;
+    if (dossierId) {
+      console.log('Filtering by dossierId:', dossierId);
+      query.dossierId = new mongoose.Types.ObjectId(dossierId);
+    }
     if (clientId) query.clientId = clientId;
 
     const documents = await Document.find(query)

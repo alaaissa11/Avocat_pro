@@ -1,0 +1,592 @@
+ <div class="max-w-4xl mx-auto animate-fade-in">
+      <!-- Header -->
+      <div class="mb-6">
+        <a routerLink="/dossiers" class="flex items-center gap-2 text-slate-500 hover:text-lawyer-primary mb-4 transition-colors">
+          <span class="material-icons text-sm">arrow_back</span>
+          Retour à la liste
+        </a>
+        <h1 class="page-title mb-2">Nouveau Dossier</h1>
+        <p class="text-slate-500 text-sm">Créez un nouveau dossier juridique avec assistance IA</p>
+      </div>
+
+      <!-- Form Card -->
+      <form (ngSubmit)="onSubmit()" class="card">
+        @if (error()) {
+          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
+            <span class="material-icons text-sm">error</span>
+            {{ error() }}
+          </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Client Selection with Search -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Client *</label>
+            <div class="relative">
+              <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">person_search</span>
+              <input
+                type="text"
+                [(ngModel)]="searchClient"
+                name="clientSearch"
+                (input)="onClientSearch()"
+                placeholder="Rechercher un client..."
+                class="input-field pl-10"
+              >
+              @if (searchResults().length > 0 && searchClient.length > 0) {
+                <div class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-card max-h-60 overflow-y-auto">
+                  @for (client of searchResults(); track client._id) {
+                    <button
+                      type="button"
+                      (click)="selectClient(client)"
+                      class="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 border-b border-slate-100 last:border-0 transition-colors"
+                    >
+                      <span class="material-icons text-slate-400">person</span>
+                      <div>
+                        <p class="font-medium text-slate-800">{{ client.nom }} {{ client.prenom }}</p>
+                        <p class="text-xs text-slate-500">{{ client.email }}</p>
+                      </div>
+                    </button>
+                  }
+                </div>
+              }
+              @if (searchClient.length > 0 && searchResults().length === 0) {
+                <div class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-card">
+                  <div class="p-4 text-center">
+                    <p class="text-sm text-slate-500 mb-3">Aucun client trouvé</p>
+                    <button
+                      type="button"
+                      (click)="createNewClient()"
+                      class="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      <span class="material-icons text-sm">person_add</span>
+                      Créer un nouveau client
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+            @if (selectedClient()) {
+              <div class="flex items-center gap-2 mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <span class="material-icons text-green-600 text-sm">check_circle</span>
+                <span class="text-sm text-green-700">{{ selectedClient()?.nom }} {{ selectedClient()?.prenom || '' }}</span>
+                <button type="button" (click)="clearClient()" class="ml-auto text-green-600 hover:text-green-700">
+                  <span class="material-icons text-sm">close</span>
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Titre Dossier -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Titre du dossier *</label>
+            <input
+              type="text"
+              [(ngModel)]="dossier.titre"
+              name="titre"
+              placeholder="Description concise de l'affaire..."
+              class="input-field"
+              required
+            >
+          </div>
+
+          <!-- Description -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Description détaillée</label>
+            <textarea
+              [(ngModel)]="dossier.description"
+              name="description"
+              rows="4"
+              placeholder="Décrivez l'affaire en détail..."
+              class="input-field resize-none"
+            ></textarea>
+            <div class="mt-2 flex items-center gap-2">
+              <button 
+                type="button"
+                (click)="getIaPredictions()"
+                [disabled]="iaLoading() || !dossier.titre || !dossier.description"
+                class="flex items-center gap-2 px-3 py-1.5 text-xs bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                @if (iaLoading()) {
+                  <span class="material-icons text-sm animate-spin">sync</span>
+                  Analyse en cours...
+                } @else {
+                  <span class="material-icons text-sm">psychology</span>
+                  Obtenir les suggestions IA
+                }
+              </button>
+              @if (iaPrediction()) {
+                <button 
+                  type="button"
+                  (click)="toggleIAPanel()"
+                  class="flex items-center gap-1 px-3 py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50"
+                >
+                  <span class="material-icons text-sm">{{ showIAPredictions() ? 'visibility_off' : 'visibility' }}</span>
+                  {{ showIAPredictions() ? 'Masquer' : 'Afficher' }} les prédictions
+                </button>
+              }
+            </div>
+            @if (iaError()) {
+              <div class="mt-2 px-3 py-2 bg-red-50 text-red-700 text-xs rounded-lg flex items-center gap-2">
+                <span class="material-icons text-sm">error</span>
+                {{ iaError() }}
+              </div>
+            }
+          </div>
+
+          <!-- Type d'Affaire -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Type d'affaire *</label>
+            <select
+              [(ngModel)]="dossier.typeAffaire"
+              name="typeAffaire"
+              class="select-field modern-select"
+              required
+              style="border-radius: 12px; border: 2px solid #e2e8f0; padding: 10px 40px 10px 16px; font-size: 14px; font-weight: 500; color: #334155; background: white url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236b7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222.5%22%20d%3D%22M19%209l-7%207-7-7%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E') no-repeat right 12px center/20px; appearance: none; -webkit-appearance: none; -moz-appearance: none; transition: all 0.2s;"
+            >
+              <option value="">Sélectionnez un type...</option>
+              @for (type of typeAffaires; track type.code) {
+                <option [value]="type.code">{{ type.label }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Sous-type -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Sous-type</label>
+            <select 
+              [(ngModel)]="dossier.sousType" 
+              name="sousType" 
+              class="select-field modern-select"
+              style="border-radius: 12px; border: 2px solid #e2e8f0; padding: 10px 40px 10px 16px; font-size: 14px; font-weight: 500; color: #334155; background: white url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236b7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222.5%22%20d%3D%22M19%209l-7%207-7-7%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E') no-repeat right 12px center/20px; appearance: none; -webkit-appearance: none; -moz-appearance: none; transition: all 0.2s;"
+            >
+              <option value="">Sélectionnez...</option>
+              <option value="contentieux">Contentieux</option>
+              <option value="consultation">Consultation</option>
+              <option value="negociation">Négociation</option>
+              <option value="arbitrage">Arbitrage</option>
+            </select>
+          </div>
+
+          <!-- Priorité -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Priorité</label>
+            <div class="flex gap-3">
+              @for (priority of priorities; track priority.value) {
+                <button
+                  type="button"
+                  (click)="dossier.priorite = priority.value"
+                  [class.border-lawyer-accent]="dossier.priorite === priority.value"
+                  [class.border-transparent]="dossier.priorite !== priority.value"
+                  class="flex-1 py-3 border-2 rounded-lg transition-all text-center"
+                  [ngClass]="priority.bgClass"
+                >
+                  <span class="material-icons text-lg" [ngClass]="priority.iconClass">{{ priority.icon }}</span>
+                  <p class="text-xs mt-1" [class.text-white]="dossier.priorite === priority.value">{{ priority.label }}</p>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Date Audience -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Date et heure d'audience</label>
+            <div class="flex gap-2 items-center">
+              <input
+                type="date"
+                [(ngModel)]="dossier.dateAudience"
+                name="dateAudience"
+                class="input-field flex-1"
+              >
+              <button
+                type="button"
+                (click)="openTimePicker('debut')"
+                class="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                [ngClass]="dossier.heureDebut ? 'bg-lawyer-primary/10 border-lawyer-primary' : 'bg-white'"
+              >
+                <span class="material-icons text-lawyer-primary text-sm">schedule</span>
+                <span class="text-sm text-slate-700">{{ dossier.heureDebut || 'Début' }}</span>
+              </button>
+              <span class="text-slate-400">-</span>
+              <button
+                type="button"
+                (click)="openTimePicker('fin')"
+                class="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                [ngClass]="dossier.heureFin ? 'bg-lawyer-primary/10 border-lawyer-primary' : 'bg-white'"
+              >
+                <span class="material-icons text-lawyer-primary text-sm">schedule</span>
+                <span class="text-sm text-slate-700">{{ dossier.heureFin || 'Fin' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Time Picker Modal -->
+          @if (showTimePicker()) {
+            <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fade-in" (click)="closeTimePicker()">
+              <div class="bg-white rounded-xl shadow-xl w-72 animate-scale-in" (click)="$event.stopPropagation()">
+                <div class="bg-lawyer-primary text-white px-4 py-3 rounded-t-xl">
+                  <div class="flex items-center justify-between">
+                    <span class="font-medium text-sm">{{ timePickerType() === 'debut' ? 'Heure de début' : 'Heure de fin' }}</span>
+                    <button (click)="closeTimePicker()" class="text-white/80 hover:text-white">
+                      <span class="material-icons text-lg">close</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center justify-center gap-3 mb-4">
+                    <div class="text-center">
+                      <label class="block text-[10px] text-slate-500 mb-1 uppercase">Heure</label>
+                      <div class="flex flex-col gap-0.5 max-h-32 overflow-y-auto">
+                        @for (h of hours; track h) {
+                          <button
+                            type="button"
+                            (click)="selectedHourValue = h"
+                            class="w-12 py-1 text-xs rounded transition-colors"
+                            [ngClass]="selectedHourValue === h ? 'bg-lawyer-primary text-white' : 'hover:bg-slate-100 text-slate-700'"
+                          >
+                            {{ h }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                    <span class="text-xl font-bold text-slate-300">:</span>
+                    <div class="text-center">
+                      <label class="block text-[10px] text-slate-500 mb-1 uppercase">Minute</label>
+                      <div class="flex flex-col gap-0.5">
+                        @for (m of minutes; track m) {
+                          <button
+                            type="button"
+                            (click)="selectedMinuteValue = m"
+                            class="w-12 py-1 text-xs rounded transition-colors"
+                            [ngClass]="selectedMinuteValue === m ? 'bg-lawyer-primary text-white' : 'hover:bg-slate-100 text-slate-700'"
+                          >
+                            {{ m }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="button" (click)="closeTimePicker()" class="flex-1 px-3 py-1.5 text-xs border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50">
+                      Annuler
+                    </button>
+                    <button type="button" (click)="confirmTime()" class="flex-1 px-3 py-1.5 text-xs bg-lawyer-primary text-white rounded-lg hover:bg-lawyer-dark">
+                      Confirmer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Juridiction -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Juridiction</label>
+            <input
+              type="text"
+              [(ngModel)]="dossier.juridiction"
+              name="juridiction"
+              placeholder="Tribunal de instance..."
+              class="input-field"
+            >
+          </div>
+
+          <!-- Adversaire -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Partie adverse</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input
+                type="text"
+                [(ngModel)]="dossier.adversary.nom"
+                name="adversaryNom"
+                placeholder="Nom de l'adversaire"
+                class="input-field"
+              >
+              <input
+                type="text"
+                [(ngModel)]="dossier.adversary.avocat"
+                name="adversaryAvocat"
+                placeholder="Avocat adverse"
+                class="input-field"
+              >
+              <input
+                type="email"
+                [(ngModel)]="dossier.adversary.email"
+                name="adversaryEmail"
+                placeholder="Email adverse"
+                class="input-field"
+              >
+            </div>
+          </div>
+        </div>
+
+        @if (showCreateClientModal()) {
+          <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-lawyer-dark">Nouveau Client</h3>
+                <button type="button" (click)="closeCreateClientModal()" class="text-slate-400 hover:text-slate-600">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+              <div class="p-6">
+                <app-client-create [isModal]="true" (clientCreated)="onClientCreated($event)"></app-client-create>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Panel IA Prédictions -->
+        @if (showIAPredictions() && iaPrediction()) {
+          <div class="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-indigo-900 flex items-center gap-2">
+                <span class="material-icons text-indigo-600">psychology</span>
+                Suggestions IA Prédictives
+              </h3>
+              <button type="button" (click)="closeIAPanel()" class="text-slate-400 hover:text-slate-600">
+                <span class="material-icons">close</span>
+              </button>
+            </div>
+
+            <!-- Mots-clés extraits -->
+            @if (iaPrediction()?.motsCles?.length) {
+              <div class="mb-4 p-3 bg-white rounded-lg border border-indigo-100">
+                <p class="text-xs font-medium text-indigo-700 mb-2">Mots-clés extraits</p>
+                <div class="flex flex-wrap gap-1">
+                  @for (kw of iaPrediction()?.motsCles; track kw.word) {
+                    <span class="px-2 py-0.5 text-xs rounded-full" 
+                      [class.bg-indigo-100]="kw.weight >= 4"
+                      [class.bg-slate-100]="kw.weight < 4"
+                      [class.text-indigo-800]="kw.weight >= 4"
+                      [class.text-slate-600]="kw.weight < 4">
+                      {{ kw.word }} ({{ kw.weight }})
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Durée prédite -->
+              <div class="p-4 bg-white rounded-lg border" 
+                [class.border-green-300]="acceptedSuggestions().duree"
+                [class.border-slate-200]="!acceptedSuggestions().duree">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-slate-700 flex items-center gap-2">
+                    <span class="material-icons text-blue-500 text-lg">schedule</span>
+                    Durée estimée
+                  </span>
+                  @if (acceptedSuggestions().duree) {
+                    <span class="material-icons text-green-500 text-sm">check_circle</span>
+                  }
+                </div>
+                <p class="text-2xl font-bold text-slate-800">{{ iaPrediction()?.duree?.jours }} jours</p>
+                <p class="text-xs text-slate-500">{{ iaPrediction()?.duree?.mois }} mois • Confiance: {{ iaPrediction()?.duree?.confiance }}%</p>
+                <p class="text-xs text-slate-400 mt-1">Basé sur {{ iaPrediction()?.duree?.baseHistorique }} dossiers similaires</p>
+                <button 
+                  type="button"
+                  (click)="applySuggestion('duree')"
+                  [disabled]="acceptedSuggestions().duree"
+                  class="mt-2 w-full text-xs py-1.5 rounded border transition-colors"
+                  [class.bg-green-500]="acceptedSuggestions().duree"
+                  [class.text-white]="acceptedSuggestions().duree"
+                  [class.border-green-300]="!acceptedSuggestions().duree"
+                  [class.text-green-700]="!acceptedSuggestions().duree"
+                  [class.hover:bg-green-50]="!acceptedSuggestions().duree">
+                  {{ acceptedSuggestions().duree ? 'Acceptée' : 'Accepter' }}
+                </button>
+              </div>
+
+              <!-- Probabilité de succès -->
+              <div class="p-4 bg-white rounded-lg border"
+                [class.border-green-300]="acceptedSuggestions().success"
+                [class.border-slate-200]="!acceptedSuggestions().success">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-slate-700 flex items-center gap-2">
+                    <span class="material-icons text-yellow-500 text-lg">trending_up</span>
+                    Probabilité de succès
+                  </span>
+                  @if (acceptedSuggestions().success) {
+                    <span class="material-icons text-green-500 text-sm">check_circle</span>
+                  }
+                </div>
+                <p class="text-2xl font-bold text-slate-800">{{ iaPrediction()?.probabiliteSuccess?.taux }}%</p>
+                <p class="text-xs text-slate-500">Confiance: {{ iaPrediction()?.probabiliteSuccess?.confiance }}%</p>
+                <p class="text-xs text-slate-400 mt-1">{{ iaPrediction()?.probabiliteSuccess?.favorables }} favorables / {{ iaPrediction()?.probabiliteSuccess?.defavorables }} défavorables</p>
+                <button 
+                  type="button"
+                  (click)="applySuggestion('success')"
+                  [disabled]="acceptedSuggestions().success"
+                  class="mt-2 w-full text-xs py-1.5 rounded border transition-colors"
+                  [class.bg-green-500]="acceptedSuggestions().success"
+                  [class.text-white]="acceptedSuggestions().success"
+                  [class.border-green-300]="!acceptedSuggestions().success"
+                  [class.text-green-700]="!acceptedSuggestions().success"
+                  [class.hover:bg-green-50]="!acceptedSuggestions().success">
+                  {{ acceptedSuggestions().success ? 'Acceptée' : 'Accepter' }}
+                </button>
+              </div>
+
+              <!-- Avocat recommandé -->
+              @if (iaPrediction()?.avocatRecommande?.recommandation) {
+                <div class="p-4 bg-white rounded-lg border"
+                  [class.border-green-300]="acceptedSuggestions().avocat"
+                  [class.border-slate-200]="!acceptedSuggestions().avocat">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-slate-700 flex items-center gap-2">
+                      <span class="material-icons text-purple-500 text-lg">person</span>
+                      Avocat recommandé
+                    </span>
+                    @if (acceptedSuggestions().avocat) {
+                      <span class="material-icons text-green-500 text-sm">check_circle</span>
+                    }
+                  </div>
+                  <p class="font-semibold text-slate-800">{{ iaPrediction()?.avocatRecommande?.recommandation?.nom }} {{ iaPrediction()?.avocatRecommande?.recommandation?.prenom }}</p>
+                  <p class="text-xs text-slate-500">Taux de succès: {{ iaPrediction()?.avocatRecommande?.recommandation?.tauxSucces }}%</p>
+                  <p class="text-xs text-slate-400">{{ iaPrediction()?.avocatRecommande?.recommandation?.experiencia }}</p>
+                  <button 
+                    type="button"
+                    (click)="applySuggestion('avocat')"
+                    [disabled]="acceptedSuggestions().avocat"
+                    class="mt-2 w-full text-xs py-1.5 rounded border transition-colors"
+                    [class.bg-green-500]="acceptedSuggestions().avocat"
+                    [class.text-white]="acceptedSuggestions().avocat"
+                    [class.border-green-300]="!acceptedSuggestions().avocat"
+                    [class.text-green-700]="!acceptedSuggestions().avocat"
+                    [class.hover:bg-green-50]="!acceptedSuggestions().avocat">
+                    {{ acceptedSuggestions().avocat ? 'Accepté' : 'Accepter' }}
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Documents suggérés -->
+            @if (iaPrediction()?.documentsSuggeres?.length) {
+              <div class="mt-4 p-4 bg-white rounded-lg border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-slate-700 flex items-center gap-2">
+                    <span class="material-icons text-orange-500 text-lg">description</span>
+                    Documents types suggérés
+                  </span>
+                  @if (acceptedSuggestions().documents) {
+                    <span class="material-icons text-green-500 text-sm">check_circle</span>
+                  }
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  @for (doc of iaPrediction()?.documentsSuggeres; track doc.nom) {
+                    <span class="px-2 py-1 text-xs rounded-full border"
+                      [class.bg-orange-50]="doc.obligatoire"
+                      [class.border-orange-200]="doc.obligatoire"
+                      [class.text-orange-700]="doc.obligatoire"
+                      [class.bg-slate-50]="!doc.obligatoire"
+                      [class.border-slate-200]="!doc.obligatoire"
+                      [class.text-slate-600]="!doc.obligatoire">
+                      {{ doc.nom }}
+                      @if (doc.obligatoire) {
+                        <span class="ml-1 text-orange-600">*</span>
+                      }
+                    </span>
+                  }
+                </div>
+                <button 
+                  type="button"
+                  (click)="applySuggestion('documents')"
+                  [disabled]="acceptedSuggestions().documents"
+                  class="mt-2 text-xs py-1.5 px-3 rounded border transition-colors"
+                  [class.bg-green-500]="acceptedSuggestions().documents"
+                  [class.text-white]="acceptedSuggestions().documents"
+                  [class.border-green-300]="!acceptedSuggestions().documents"
+                  [class.text-green-700]="!acceptedSuggestions().documents">
+                  {{ acceptedSuggestions().documents ? 'Acceptée' : 'Accepter les documents' }}
+                </button>
+              </div>
+            }
+
+            <!-- Planning suggéré -->
+            @if (iaPrediction()?.planningSugere?.etapes?.length) {
+              <div class="mt-4 p-4 bg-white rounded-lg border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-slate-700 flex items-center gap-2">
+                    <span class="material-icons text-teal-500 text-lg">timeline</span>
+                    Planning suggéré
+                  </span>
+                  @if (acceptedSuggestions().planning) {
+                    <span class="material-icons text-green-500 text-sm">check_circle</span>
+                  }
+                </div>
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                  @for (step of iaPrediction()?.planningSugere?.etapes; track step.etape) {
+                    <div class="flex items-center gap-2 text-xs">
+                      <span class="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-medium">{{ step.ordre }}</span>
+                      <span class="flex-1 text-slate-700">{{ step.etape }}</span>
+                      <span class="text-slate-500">{{ step.delai }} jours</span>
+                    </div>
+                  }
+                </div>
+                <button 
+                  type="button"
+                  (click)="applySuggestion('planning')"
+                  [disabled]="acceptedSuggestions().planning"
+                  class="mt-2 text-xs py-1.5 px-3 rounded border transition-colors"
+                  [class.bg-green-500]="acceptedSuggestions().planning"
+                  [class.text-white]="acceptedSuggestions().planning"
+                  [class.border-green-300]="!acceptedSuggestions().planning"
+                  [class.text-green-700]="!acceptedSuggestions().planning">
+                  {{ acceptedSuggestions().planning ? 'Accepté' : 'Accepter le planning' }}
+                </button>
+              </div>
+            }
+
+            <!-- Dossiers similaires -->
+            @if (iaPrediction()?.similarDossiers?.length) {
+              <div class="mt-4 p-4 bg-white rounded-lg border border-slate-200">
+                <p class="text-sm font-medium text-slate-700 mb-2">Dossiers similaires analysés</p>
+                <div class="space-y-1 max-h-32 overflow-y-auto">
+                  @for (dossier of iaPrediction()?.similarDossiers?.slice(0, 5); track dossier.id) {
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-slate-600">{{ dossier.numero }} - {{ dossier.titre }}</span>
+                      <span class="text-indigo-600">{{ dossier.similarite }}% similarité</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <p class="mt-4 text-xs text-slate-500 italic">
+              L'IA suggère ces informations basées sur l'historique des dossiers. Vous pouvez accepter ou ignorer chaque suggestion.
+            </p>
+          </div>
+        }
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-slate-100">
+          <a routerLink="/dossiers" class="btn-secondary">Annuler</a>
+          @if (iaPrediction()) {
+            <button 
+              type="button" 
+              (click)="submitWithFeedback()"
+              class="btn-primary flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              [disabled]="!isFormValid() || loading()">
+              @if (loading()) {
+                <span class="material-icons text-lg animate-spin">refresh</span>
+                Création en cours...
+              } @else {
+                <span class="material-icons text-lg">save</span>
+                Créer le dossier avec suggestions
+              }
+            </button>
+          } @else {
+            <button type="submit" class="btn-primary flex items-center gap-2" [disabled]="!isFormValid() || loading()">
+              @if (loading()) {
+                <span class="material-icons text-lg animate-spin">refresh</span>
+                Création en cours...
+              } @else {
+                <span class="material-icons text-lg">save</span>
+                Créer le dossier
+              }
+            </button>
+          }
+        </div>
+      </form>
+</div>
+ 

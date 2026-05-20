@@ -35,7 +35,26 @@ const dossierSchema = new mongoose.Schema({
   iaPrediction: {
     categorieSuggeree: { type: String },
     confiance: { type: Number },
-    datePrediction: { type: Date }
+    datePrediction: { type: Date },
+    dureeSuggeree: { type: Number },
+    dureeConfiance: { type: Number },
+    probabiliteSuccess: { type: Number },
+    avocatRecommandeId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    avocatRecommandeNom: { type: String },
+    documentsSuggernes: [{ type: String }],
+    planningSuggere: { type: mongoose.Schema.Types.Mixed }
+  },
+  iaFeedback: {
+    predictionsRecues: { type: Boolean, default: false },
+    suggestionDureeAcceptee: { type: Boolean },
+    suggestionSuccessAcceptee: { type: Boolean },
+    suggestionAvocatAcceptee: { type: Boolean },
+    suggestionDocumentsAcceptee: { type: Boolean },
+    suggestionPlanningAcceptee: { type: Boolean },
+    commentaires: { type: String },
+    dateFeedback: { type: Date },
+    accuracyDuree: { type: Number },
+    accuracySuccess: { type: Number }
   },
   historique: [{
     action: { type: String },

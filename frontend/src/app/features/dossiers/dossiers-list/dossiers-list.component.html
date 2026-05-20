@@ -1,17 +1,4 @@
-import { Component, signal, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { DossierService } from '../../../core/services/dossier.service';
-import { DocumentService, Document } from '../../../core/services/document.service';
-import { Dossier, DossierStats } from '../../../core/models/dossier.model';
-
-@Component({
-  selector: 'app-dossiers-list',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
-    @if (selectedDossier()) {
-      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in" (click)="closeModal()">
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in" (click)="closeModal()">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scale-in" (click)="$event.stopPropagation()">
           <!-- Header -->
           <div class="bg-gradient-to-r from-lawyer-primary to-lawyer-dark text-white p-6">
@@ -167,7 +154,7 @@ import { Dossier, DossierStats } from '../../../core/models/dossier.model';
 
             <!-- Historique -->
             @if (selectedDossier()?.historique && selectedDossier()!.historique.length > 0) {
-              <div>
+              <div class="mb-6">
                 <div class="flex items-center gap-2 mb-4">
                   <span class="material-icons text-lawyer-primary">history</span>
                   <h3 class="text-lg font-semibold text-lawyer-dark">Historique</h3>
@@ -189,6 +176,49 @@ import { Dossier, DossierStats } from '../../../core/models/dossier.model';
                 </div>
               </div>
             }
+
+            <!-- Documents -->
+            <div class="mt-6">
+              <div class="flex items-center gap-2 mb-4">
+                <span class="material-icons text-lawyer-primary">description</span>
+                <h3 class="text-lg font-semibold text-lawyer-dark">Documents attachés</h3>
+                <span class="bg-lawyer-primary text-white text-xs px-2 py-1 rounded-full">{{ documentsList.length }}</span>
+              </div>
+              
+              @if (documentsList.length > 0) {
+                <div class="space-y-3">
+                  @for (doc of documentsList; track doc._id) {
+                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center justify-between hover:border-lawyer-primary/30 transition-all">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-lawyer-primary/10 flex items-center justify-center">
+                          <span class="material-icons text-lawyer-primary">{{ getDocumentTypeIcon(doc.type) }}</span>
+                        </div>
+                        <div>
+                          <p class="font-medium text-lawyer-dark">{{ doc.nom }}</p>
+                          <p class="text-sm text-slate-500">{{ getDocumentTypeLabel(doc.type) }} • {{ formatFileSize(doc.taille) }}</p>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <button (click)="viewDocument(doc)" class="p-2 text-slate-400 hover:text-lawyer-primary hover:bg-lawyer-primary/10 rounded-lg transition-all" title="Voir">
+                          <span class="material-icons text-sm">visibility</span>
+                        </button>
+                        <button (click)="downloadDocument(doc)" class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" title="Télécharger">
+                          <span class="material-icons text-sm">download</span>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
+                  <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2">
+                    <span class="material-icons text-slate-400">folder_open</span>
+                  </div>
+                  <p class="text-slate-500">Aucun document attaché à ce dossier</p>
+                  <p class="text-xs text-slate-400 mt-1">Les documents uploadés depuis la page Documents seront affichés ici</p>
+                </div>
+              }
+            </div>
           </div>
 
           <!-- Footer -->
@@ -402,312 +432,5 @@ import { Dossier, DossierStats } from '../../../core/models/dossier.model';
             Suivant
           </button>
         </div>
-      </div>
     </div>
-  `,
-  styles: [`
-    .material-icons { font-size: 18px; }
-  `]
-})
-export class DossiersListComponent implements OnInit {
-  private dossierService = inject(DossierService);
-  private documentService = inject(DocumentService);
-  private cdr = inject(ChangeDetectorRef);
-  private ngZone = inject(NgZone);
-  
-  dossiers = signal<Dossier[]>([]);
-  stats = signal<DossierStats | null>(null);
-  loading = signal(true);
-  selectedDossier = signal<Dossier | null>(null);
-  dossierDocuments = signal<Document[]>([]);
-  
-  // Plain array for documents (more reliable)
-  documentsList: Document[] = [];
-  
-  currentPage = signal(1);
-  paginationStart = signal(1);
-  paginationEnd = signal(10);
-  limit = 10;
-  total = signal(0);
-  totalPages = signal(1);
-  
-  filters = signal<{search?: string; typeAffaire?: string; statut?: string}>({});
-
-  ngOnInit() {
-    this.loadDossiers();
-    this.loadStats();
-  }
-
-  loadDossiers() {
-    this.loading.set(true);
-    const params = {
-      page: this.currentPage(),
-      limit: this.limit,
-      ...this.filters()
-    };
-    
-    this.dossierService.getDossiers(params).subscribe({
-      next: (response) => {
-        this.dossiers.set(response.dossiers);
-        this.total.set(response.pagination.total);
-        this.totalPages.set(response.pagination.pages);
-        this.updatePagination();
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('Error loading dossiers:', err);
-        this.loading.set(false);
-      }
-    });
-  }
-
-  loadStats() {
-    this.dossierService.getStats().subscribe({
-      next: (stats) => this.stats.set(stats),
-      error: (err) => console.error('Error loading stats:', err)
-    });
-  }
-
-  updatePagination() {
-    const page = this.currentPage();
-    const limit = this.limit;
-    this.paginationStart.set((page - 1) * limit + 1);
-    this.paginationEnd.set(Math.min(page * limit, this.total()));
-  }
-
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const current = this.currentPage();
-    const total = this.totalPages();
-    
-    for (let i = Math.max(1, current - 2); i <= Math.min(total, current + 2); i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-      this.loadDossiers();
-    }
-  }
-
-  onSearch(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.filters.update(f => ({ ...f, search: value }));
-    this.currentPage.set(1);
-    this.loadDossiers();
-  }
-
-  onFilterChange(type: string, event: Event) {
-    const value = (event.target as HTMLSelectElement).value;
-    this.filters.update(f => ({ 
-      ...f, 
-      [type === 'type' ? 'typeAffaire' : 'statut']: value || undefined 
-    }));
-    this.currentPage.set(1);
-    this.loadDossiers();
-  }
-
-  onSortChange(event: Event) {
-    const value = (event.target as HTMLSelectElement).value;
-    console.log('Sort:', value);
-  }
-
-  getTypeBadgeClass(type: string): string {
-    const classes: Record<string, string> = {
-      civil: 'badge-info',
-      penal: 'badge-danger',
-      commercial: 'badge-warning',
-      travail: 'badge-success',
-      famille: 'badge-info',
-      administratif: 'badge-secondary',
-      immobilier: 'badge-info',
-      bancaire: 'badge-warning',
-      autre: 'bg-slate-100 text-slate-600'
-    };
-    return classes[type] || 'badge-info';
-  }
-
-  getTypeLabel(type: string): string {
-    const labels: Record<string, string> = {
-      civil: 'Civil',
-      penal: 'Pénal',
-      commercial: 'Commercial',
-      travail: 'Travail',
-      famille: 'Famille',
-      administratif: 'Administratif',
-      immobilier: 'Immobilier',
-      bancaire: 'Bancaire',
-      autre: 'Autre'
-    };
-    return labels[type] || type;
-  }
-
-  getStatutBadgeClass(statut: string): string {
-    const classes: Record<string, string> = {
-      nouveau: 'badge-info',
-      en_cours: 'badge-warning',
-      en_attente: 'bg-orange-100 text-orange-700',
-      cloture: 'badge-success',
-      archive: 'bg-slate-100 text-slate-600'
-    };
-    return classes[statut] || 'badge-info';
-  }
-
-  getStatutLabel(statut: string): string {
-    const labels: Record<string, string> = {
-      nouveau: 'Nouveau',
-      en_cours: 'En cours',
-      en_attente: 'En attente',
-      cloture: 'Clôturé',
-      archive: 'Archivé'
-    };
-    return labels[statut] || statut;
-  }
-
-  getClientName(clientId: string | { _id: string; nom: string; prenom?: string } | undefined): string {
-    if (!clientId) return '-';
-    if (typeof clientId === 'string') return clientId;
-    return `${clientId.nom} ${clientId.prenom || ''}`.trim();
-  }
-
-  getAssigneName(assigneA: string | { _id: string; nom: string; prenom?: string } | undefined | null): string {
-    if (!assigneA) return '-';
-    if (typeof assigneA === 'string') return assigneA;
-    return `${assigneA.nom} ${assigneA.prenom || ''}`.trim();
-  }
-
-  getAssigneFullInfo(assigneA: string | { _id: string; nom: string; prenom?: string } | undefined | null): string {
-    if (!assigneA) return 'Non assigné';
-    if (typeof assigneA === 'string') return assigneA;
-    return `${assigneA.nom} ${assigneA.prenom || ''}`.trim();
-  }
-
-  getClientFullInfo(clientId: string | { _id: string; nom: string; prenom?: string } | undefined): string {
-    if (!clientId) return '-';
-    if (typeof clientId === 'string') return clientId;
-    return `${clientId.nom} ${clientId.prenom || ''}`.trim();
-  }
-
-  getPrioriteLabel(priorite: number): string {
-    const labels: Record<number, string> = {
-      1: 'Haute',
-      2: 'Moyenne-Haute',
-      3: 'Moyenne',
-      4: 'Moyenne-Basse',
-      5: 'Basse'
-    };
-    return labels[priorite] || 'Moyenne';
-  }
-
-  getActionLabel(action: string): string {
-    const labels: Record<string, string> = {
-      'dossier_cree': 'Dossier créé',
-      'dossier_modifie': 'Dossier modifié',
-      'commentaire': 'Commentaire ajouté',
-      'statut_change': 'Statut changé',
-      'assigne_change': 'Avocat assigné'
-    };
-    return labels[action] || action;
-  }
-
-  viewDossier(dossier: Dossier) {
-    console.log('Opening dossier:', dossier._id, dossier.numero);
-    this.selectedDossier.set(dossier);
-    this.loadDossierDocuments(dossier._id);
-  }
-
-  loadDossierDocuments(dossierId: string) {
-    this.documentService.getDocuments({ dossierId, limit: 100 }).subscribe({
-      next: (response) => {
-        this.documentsList = [...response.documents];
-        this.dossierDocuments.set(response.documents);
-      },
-      error: (err) => console.error('Error loading documents:', err)
-    });
-  }
-
-  closeModal() {
-    this.selectedDossier.set(null);
-    this.dossierDocuments.set([]);
-  }
-
-  formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  getDocumentTypeIcon(type: string): string {
-    const icons: Record<string, string> = {
-      contrat: 'description',
-      plainte: 'gavel',
-      facture: 'receipt',
-      pouvoir: 'verified',
-      jugement: 'balance',
-      correspondance: 'mail',
-      decision: 'policy',
-      requete: 'article',
-      piece_jointe: 'attachment',
-      autre: 'insert_drive_file'
-    };
-    return icons[type] || 'insert_drive_file';
-  }
-
-  getDocumentTypeLabel(type: string): string {
-    const labels: Record<string, string> = {
-      contrat: 'Contrat',
-      plainte: 'Plainte',
-      facture: 'Facture',
-      pouvoir: 'Pouvoir',
-      jugement: 'Jugement',
-      correspondance: 'Correspondance',
-      decision: 'Décision',
-      requete: 'Requête',
-      piece_jointe: 'Pièce jointe',
-      autre: 'Autre'
-    };
-    return labels[type] || type;
-  }
-
-  downloadDocument(doc: Document) {
-    this.documentService.downloadDocument(doc._id).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = doc.nom;
-        link.click();
-        window.URL.revokeObjectURL(url);
-      },
-      error: (err) => console.error('Error downloading document:', err)
-    });
-  }
-
-  viewDocument(doc: Document) {
-    this.documentService.downloadDocument(doc._id).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        window.open(url, '_blank');
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-      },
-      error: (err) => console.error('Error viewing document:', err)
-    });
-  }
-
-  refreshDocuments() {
-    const dossier = this.selectedDossier();
-    if (dossier) {
-      this.loadDossierDocuments(dossier._id);
-    }
-  }
-
-  getDebugInfo(): string {
-    const docs = this.dossierDocuments();
-    return `docs.length: ${docs.length}, selectedDossier: ${this.selectedDossier()?._id || 'none'}`;
-  }
-}
+</div>

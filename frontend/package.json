@@ -19,21 +19,22 @@
     "@angular/platform-browser": "^17.3.0",
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
-    "rxjs": "~7.8.0",
-    "tslib": "^2.6.0",
-    "zone.js": "~0.14.0",
+    "@faker-js/faker": "^8.4.1",
     "chart.js": "^4.4.0",
     "primeicons": "^7.0.0",
-    "primeng": "^17.18.0"
+    "primeng": "^17.18.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.6.0",
+    "zone.js": "~0.14.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^17.3.0",
     "@angular/cli": "^17.3.0",
     "@angular/compiler-cli": "^17.3.0",
     "@types/node": "^20.11.0",
-    "typescript": "~5.4.0",
-    "tailwindcss": "^3.4.0",
     "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0"
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "~5.4.0"
   }
 }

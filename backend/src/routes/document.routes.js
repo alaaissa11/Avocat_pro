@@ -71,7 +71,7 @@ router.get('/', auth, checkPermission('read'), documentController.getDocuments);
  *       201:
  *         description: Document uploaded
  */
-router.post('/upload', auth, checkPermission('write'), upload.single('file'), documentController.uploadDocument);
+router.post('/upload', upload.single('file'), auth, checkPermission('write'), documentController.uploadDocument);
 
 /**
  * @swagger

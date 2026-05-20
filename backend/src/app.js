@@ -14,6 +14,7 @@ const userRoutes = require('./routes/user.routes');
 const factureRoutes = require('./routes/facture.routes');
 const operationRoutes = require('./routes/operation.routes');
 const parametrageRoutes = require('./routes/parametrage.routes');
+const iaRoutes = require('./routes/ia.routes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -58,6 +59,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/factures', factureRoutes);
 app.use('/api/operations', operationRoutes);
 app.use('/api/parametrage', parametrageRoutes);
+app.use('/api/ia', iaRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get('/health', (req, res) => res.json({ status: 'OK', date: new Date() }));

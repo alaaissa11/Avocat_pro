@@ -1,0 +1,237 @@
+@if (loading()) {
+  <div class="flex justify-center items-center h-64">
+    <span class="material-icons text-4xl text-lawyer-primary animate-spin">sync</span>
+  </div>
+} @else if (error()) {
+  <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+    {{ error() }}
+  </div>
+} @else if (dossier()) {
+  <div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <a routerLink="/dossiers" class="flex items-center gap-2 text-slate-500 hover:text-lawyer-primary mb-2">
+          <span class="material-icons text-sm">arrow_back</span>
+          Retour aux dossiers
+        </a>
+        <h1 class="page-title">{{ dossier().titre }}</h1>
+        <p class="text-slate-500">{{ dossier().numero }}</p>
+      </div>
+      <span class="px-4 py-2 rounded-full text-sm font-medium" [ngClass]="getStatusColor(dossier().statut)">
+        {{ getStatusLabel(dossier().statut) }}
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Informations principales -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Détails du dossier -->
+        <div class="card">
+          <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span class="material-icons text-lawyer-primary">folder</span>
+            Informations du dossier
+          </h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs text-slate-500 mb-1">Type d'affaire</p>
+              <p class="font-medium text-slate-800 capitalize">{{ dossier().typeAffaire }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500 mb-1">Sous-type</p>
+              <p class="font-medium text-slate-800">{{ dossier().sousType || '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500 mb-1">Priorité</p>
+              <p class="font-medium" [ngClass]="getPriorityColor(dossier().priorite)">
+                {{ getPriorityLabel(dossier().priorite) }}
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500 mb-1">Juridiction</p>
+              <p class="font-medium text-slate-800">{{ dossier().juridiction || '-' }}</p>
+            </div>
+            <div class="col-span-2">
+              <p class="text-xs text-slate-500 mb-1">Description</p>
+              <p class="text-slate-700">{{ dossier().description || 'Aucune description' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Partie adverse -->
+        @if (dossier().adversary?.nom) {
+          <div class="card">
+            <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+              <span class="material-icons text-lawyer-primary">person_search</span>
+              Partie adverse
+            </h2>
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <p class="text-xs text-slate-500 mb-1">Nom</p>
+                <p class="font-medium text-slate-800">{{ dossier().adversary.nom }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-slate-500 mb-1">Avocat</p>
+                <p class="font-medium text-slate-800">{{ dossier().adversary.avocat || '-' }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-slate-500 mb-1">Email</p>
+                <p class="font-medium text-slate-800">{{ dossier().adversary.email || '-' }}</p>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Prédictions IA -->
+        @if (dossier().iaPrediction) {
+          <div class="card bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+            <h2 class="text-lg font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+              <span class="material-icons text-indigo-600">psychology</span>
+              Suggestions IA
+              @if (dossier().iaFeedback?.predictionsRecues) {
+                <span class="ml-2 px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full">
+                  Appliqué
+                </span>
+              }
+            </h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              @if (dossier().iaPrediction.dureeSuggeree) {
+                <div class="p-3 bg-white rounded-lg border border-indigo-100">
+                  <p class="text-xs text-slate-500 mb-1">Durée suggérée</p>
+                  <p class="font-bold text-slate-800">{{ dossier().iaPrediction.dureeSuggeree }} jours</p>
+                  <p class="text-xs text-slate-400">Confiance: {{ dossier().iaPrediction.dureeConfiance }}%</p>
+                </div>
+              }
+              @if (dossier().iaPrediction.probabiliteSuccess) {
+                <div class="p-3 bg-white rounded-lg border border-indigo-100">
+                  <p class="text-xs text-slate-500 mb-1">Probabilité succès</p>
+                  <p class="font-bold text-slate-800">{{ dossier().iaPrediction.probabiliteSuccess }}%</p>
+                </div>
+              }
+              @if (dossier().iaPrediction.avocatRecommandeNom) {
+                <div class="p-3 bg-white rounded-lg border border-indigo-100">
+                  <p class="text-xs text-slate-500 mb-1">Avocat recommandé</p>
+                  <p class="font-bold text-slate-800 text-sm">{{ dossier().iaPrediction.avocatRecommandeNom }}</p>
+                </div>
+              }
+              @if (dossier().iaPrediction.categorieSuggeree) {
+                <div class="p-3 bg-white rounded-lg border border-indigo-100">
+                  <p class="text-xs text-slate-500 mb-1">Catégorie</p>
+                  <p class="font-bold text-slate-800 capitalize">{{ dossier().iaPrediction.categorieSuggeree }}</p>
+                  <p class="text-xs text-slate-400">Confiance: {{ dossier().iaPrediction.confiance }}%</p>
+                </div>
+              }
+            </div>
+
+            @if (dossier().iaPrediction.documentsSuggernes?.length) {
+              <div class="mb-4">
+                <p class="text-sm font-medium text-indigo-800 mb-2">Documents suggérés</p>
+                <div class="flex flex-wrap gap-2">
+                  @for (doc of dossier().iaPrediction.documentsSuggernes; track doc) {
+                    <span class="px-2 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full">
+                      {{ doc }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (dossier().iaFeedback) {
+              <div class="p-3 bg-white rounded-lg border border-indigo-100">
+                <p class="text-sm font-medium text-indigo-800 mb-2">Feedback appliqué</p>
+                <div class="flex flex-wrap gap-2">
+                  @if (dossier().iaFeedback.suggestionDureeAcceptee) {
+                    <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Durée ✓</span>
+                  }
+                  @if (dossier().iaFeedback.suggestionSuccessAcceptee) {
+                    <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Succès ✓</span>
+                  }
+                  @if (dossier().iaFeedback.suggestionAvocatAcceptee) {
+                    <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Avocat ✓</span>
+                  }
+                  @if (dossier().iaFeedback.suggestionDocumentsAcceptee) {
+                    <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Documents ✓</span>
+                  }
+                  @if (dossier().iaFeedback.suggestionPlanningAcceptee) {
+                    <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Planning ✓</span>
+                  }
+                  @if (!dossier().iaFeedback.suggestionDureeAcceptee && !dossier().iaFeedback.suggestionSuccessAcceptee && 
+                       !dossier().iaFeedback.suggestionAvocatAcceptee && !dossier().iaFeedback.suggestionDocumentsAcceptee &&
+                       !dossier().iaFeedback.suggestionPlanningAcceptee) {
+                    <span class="px-2 py-1 text-xs bg-slate-100 text-slate-600 rounded">Aucune suggestion acceptée</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- Client -->
+        <div class="card">
+          <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span class="material-icons text-lawyer-primary">person</span>
+            Client
+          </h2>
+          @if (client()) {
+            <div>
+              <p class="font-medium text-slate-800">{{ client().nom }} {{ client().prenom || '' }}</p>
+              <p class="text-sm text-slate-500">{{ client().email }}</p>
+              <p class="text-sm text-slate-500">{{ client().telephone }}</p>
+              <p class="text-sm text-slate-500">{{ client().adresse }}, {{ client().ville }}</p>
+            </div>
+          } @else {
+            <p class="text-slate-500">Client non trouvé</p>
+          }
+        </div>
+
+        <!-- Dates -->
+        <div class="card">
+          <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span class="material-icons text-lawyer-primary">event</span>
+            Dates
+          </h2>
+          <div class="space-y-3">
+            <div>
+              <p class="text-xs text-slate-500">Date de création</p>
+              <p class="font-medium text-slate-800">{{ formatDate(dossier().dateCreation) }}</p>
+            </div>
+            @if (dossier().dateAudience) {
+              <div>
+                <p class="text-xs text-slate-500">Date d'audience</p>
+                <p class="font-medium text-slate-800">{{ formatDate(dossier().dateAudience) }}</p>
+              </div>
+            }
+            @if (dossier().dateCloture) {
+              <div>
+                <p class="text-xs text-slate-500">Date de clôture</p>
+                <p class="font-medium text-green-700">{{ formatDate(dossier().dateCloture) }}</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Avocat assigné -->
+        @if (dossier().assigneA) {
+          <div class="card">
+            <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+              <span class="material-icons text-lawyer-primary">gavel</span>
+              Avocat assigné
+            </h2>
+            <p class="font-medium text-slate-800">{{ dossier().assigneA.nom }} {{ dossier().assigneA.prenom }}</p>
+          </div>
+        }
+
+        <!-- Numéro RG -->
+        @if (dossier().numeroRG) {
+          <div class="card">
+            <h2 class="text-lg font-semibold text-slate-800 mb-4">Numéro RG</h2>
+            <p class="font-medium text-slate-800">{{ dossier().numeroRG }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
