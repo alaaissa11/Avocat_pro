@@ -83,23 +83,60 @@
               </div>
             }
 
-            <!-- Dates et Juridiction -->
+<!-- Dates et Juridiction -->
             <div class="mb-6">
               <div class="flex items-center gap-2 mb-4">
                 <span class="material-icons text-lawyer-primary">calendar_today</span>
                 <h3 class="text-lg font-semibold text-lawyer-dark">Dates et Juridiction</h3>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
                   <p class="text-xs text-slate-500 uppercase tracking-wide">Date création</p>
                   <p class="font-semibold text-lawyer-dark">{{ selectedDossier()?.dateCreation | date:'dd/MM/yyyy' }}</p>
                 </div>
-                @if (selectedDossier()?.dateAudience) {
-                  <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                    <p class="text-xs text-slate-500 uppercase tracking-wide">Date audience</p>
-                    <p class="font-semibold text-lawyer-dark">{{ selectedDossier()?.dateAudience | date:'dd/MM/yyyy' }}</p>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                  <p class="text-xs text-slate-500 uppercase tracking-wide">Date audience</p>
+                  <p class="font-semibold text-lawyer-dark">{{ selectedDossier()?.dateAudience | date:'dd/MM/yyyy' || '-' }}</p>
+                </div>
+                @if (selectedDossier()?.dateCloture) {
+                  <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+                    <p class="text-xs text-green-500 uppercase tracking-wide">Date clôture</p>
+                    <p class="font-semibold text-green-700">{{ selectedDossier()?.dateCloture | date:'dd/MM/yyyy' }}</p>
                   </div>
                 }
+                @if (selectedDossier()?.juridiction) {
+                  <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <p class="text-xs text-slate-500 uppercase tracking-wide">Juridiction</p>
+                    <p class="font-semibold text-lawyer-dark">{{ selectedDossier()?.juridiction }}</p>
+                  </div>
+                }
+                @if (selectedDossier()?.numeroRG) {
+                  <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <p class="text-xs text-slate-500 uppercase tracking-wide">N° RG</p>
+                    <p class="font-semibold text-lawyer-dark">{{ selectedDossier()?.numeroRG }}</p>
+                  </div>
+                }
+                @if (selectedDossier()?.assigneA) {
+                  <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <p class="text-xs text-blue-500 uppercase tracking-wide">Avocat assigné</p>
+                    <p class="font-semibold text-blue-700">{{ getAssigneFullInfo(selectedDossier()?.assigneA) }}</p>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Description détaillée -->
+            @if (selectedDossier()?.description) {
+              <div class="mb-6">
+                <div class="flex items-center gap-2 mb-4">
+                  <span class="material-icons text-lawyer-primary">description</span>
+                  <h3 class="text-lg font-semibold text-lawyer-dark">Description détaillée</h3>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                  <p class="text-slate-700 whitespace-pre-line">{{ selectedDossier()?.description }}</p>
+                </div>
+              </div>
+            }
                 @if (selectedDossier()?.juridiction) {
                   <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
                     <p class="text-xs text-slate-500 uppercase tracking-wide">Juridiction</p>
@@ -110,38 +147,114 @@
             </div>
 
             <!-- Partie adverse -->
-            @if (selectedDossier()?.adversary) {
+@if (selectedDossier()?.adversary) {
               <div class="mb-6">
                 <div class="flex items-center gap-2 mb-4">
-                  <span class="material-icons text-lawyer-primary">person_off</span>
+                  <span class="material-icons text-lawyer-primary">person_search</span>
                   <h3 class="text-lg font-semibold text-lawyer-dark">Partie adverse</h3>
                 </div>
-                <div class="bg-red-50 rounded-xl p-4 border border-red-200">
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    @if (selectedDossier()?.adversary?.nom) {
-                      <div>
-                        <p class="text-xs text-red-400 uppercase tracking-wide">Nom</p>
-                        <p class="font-semibold text-red-800">{{ selectedDossier()?.adversary?.nom }}</p>
-                      </div>
-                    }
-                    @if (selectedDossier()?.adversary?.avocat) {
-                      <div>
-                        <p class="text-xs text-red-400 uppercase tracking-wide">Avocat</p>
-                        <p class="font-semibold text-red-800">{{ selectedDossier()?.adversary?.avocat }}</p>
-                      </div>
-                    }
-                    @if (selectedDossier()?.adversary?.email) {
-                      <div>
-                        <p class="text-xs text-red-400 uppercase tracking-wide">Email</p>
-                        <p class="font-semibold text-red-800">{{ selectedDossier()?.adversary?.email }}</p>
-                      </div>
-                    }
-                  </div>
+                <div class="bg-red-50 rounded-xl p-4 border border-red-200 space-y-3">
+                  @if (selectedDossier()?.adversary?.nom) {
+                    <div>
+                      <p class="text-xs text-slate-500 mb-1">Nom</p>
+                      <p class="font-semibold text-red-800">{{ selectedDossier()?.adversary?.nom }}</p>
+                    </div>
+                  }
+                  @if (selectedDossier()?.adversary?.avocat) {
+                    <div>
+                      <p class="text-xs text-slate-500 mb-1">Avocat</p>
+                      <p class="font-semibold text-red-800">{{ selectedDossier()?.adversary?.avocat }}</p>
+                    </div>
+                  }
+                  @if (selectedDossier()?.adversary?.email) {
+                    <div>
+                      <p class="text-xs text-slate-500 mb-1">Email</p>
+                      <p class="font-semibold text-red-800">{{ selectedDossier()?.adversary?.email }}</p>
+                    </div>
+                  }
                 </div>
               </div>
             }
 
-            <!-- Avocat responsable -->
+            <!-- Suggestions IA -->
+            @if (selectedDossier()?.iaPrediction) {
+              <div class="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200">
+                <div class="flex items-center gap-2 mb-4">
+                  <span class="material-icons text-indigo-600">psychology</span>
+                  <h3 class="text-lg font-semibold text-indigo-900">Suggestions IA</h3>
+                  @if (selectedDossier()?.iaFeedback?.predictionsRecues) {
+                    <span class="ml-2 px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full">Appliqué</span>
+                  }
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                  @if (selectedDossier()?.iaPrediction?.dureeSuggeree) {
+                    <div class="bg-white rounded-lg p-3 border border-indigo-100">
+                      <p class="text-xs text-slate-500 mb-1">Durée estimée</p>
+                      <p class="font-bold text-slate-800">{{ selectedDossier()?.iaPrediction?.dureeSuggeree }} jours</p>
+                    </div>
+                  }
+                  @if (selectedDossier()?.iaPrediction?.probabiliteSuccess) {
+                    <div class="bg-white rounded-lg p-3 border border-indigo-100">
+                      <p class="text-xs text-slate-500 mb-1">Probabilité succès</p>
+                      <p class="font-bold text-slate-800">{{ selectedDossier()?.iaPrediction?.probabiliteSuccess }}%</p>
+                    </div>
+                  }
+                  @if (selectedDossier()?.iaPrediction?.avocatRecommandeNom) {
+                    <div class="bg-white rounded-lg p-3 border border-indigo-100 col-span-2">
+                      <p class="text-xs text-slate-500 mb-1">Avocat recommandé</p>
+                      <p class="font-bold text-slate-800">{{ selectedDossier()?.iaPrediction?.avocatRecommandeNom }}</p>
+                    </div>
+                  }
+                  @if (selectedDossier()?.iaPrediction?.categorieSuggeree) {
+                    <div class="bg-white rounded-lg p-3 border border-indigo-100">
+                      <p class="text-xs text-slate-500 mb-1">Catégorie</p>
+                      <p class="font-bold text-slate-800 capitalize">{{ selectedDossier()?.iaPrediction?.categorieSuggeree }}</p>
+                      <p class="text-xs text-slate-400">Confiance: {{ selectedDossier()?.iaPrediction?.confiance }}%</p>
+                    </div>
+                  }
+                </div>
+
+                @if (selectedDossier()?.iaPrediction?.documentsSuggernes?.length) {
+                  <div class="mb-3">
+                    <p class="text-sm font-medium text-indigo-800 mb-2">Documents suggérés</p>
+                    <div class="flex flex-wrap gap-1">
+                      @for (doc of selectedDossier()?.iaPrediction?.documentsSuggernes; track doc) {
+                        <span class="px-2 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full">{{ doc }}</span>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (selectedDossier()?.iaFeedback) {
+                  <div class="text-xs">
+                    <p class="font-medium text-indigo-800 mb-1">Feedback:</p>
+                    <div class="flex flex-wrap gap-1">
+                      @if (selectedDossier()?.iaFeedback?.suggestionDureeAcceptee) {
+                        <span class="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">Durée ✓</span>
+                      }
+                      @if (selectedDossier()?.iaFeedback?.suggestionSuccessAcceptee) {
+                        <span class="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">Succès ✓</span>
+                      }
+                      @if (selectedDossier()?.iaFeedback?.suggestionAvocatAcceptee) {
+                        <span class="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">Avocat ✓</span>
+                      }
+                      @if (selectedDossier()?.iaFeedback?.suggestionDocumentsAcceptee) {
+                        <span class="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">Documents ✓</span>
+                      }
+                      @if (selectedDossier()?.iaFeedback?.suggestionPlanningAcceptee) {
+                        <span class="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">Planning ✓</span>
+                      }
+                      @if (!selectedDossier()?.iaFeedback?.suggestionDureeAcceptee && !selectedDossier()?.iaFeedback?.suggestionSuccessAcceptee && 
+                           !selectedDossier()?.iaFeedback?.suggestionAvocatAcceptee && !selectedDossier()?.iaFeedback?.suggestionDocumentsAcceptee) {
+                        <span class="px-2 py-0.5 text-xs bg-slate-100 text-slate-500 rounded">Aucune suggestion acceptée</span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
             <div class="mb-6">
               <div class="flex items-center gap-2 mb-4">
                 <span class="material-icons text-lawyer-primary">gavel</span>

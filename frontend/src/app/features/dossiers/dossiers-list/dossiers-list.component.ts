@@ -165,6 +165,100 @@ import { Dossier, DossierStats } from '../../../core/models/dossier.model';
               </div>
             </div>
 
+            <!-- Suggestions IA -->
+            @if (selectedDossier()?.iaPrediction && hasIAPrediction()) {
+              <div class="mb-6">
+                <div class="flex items-center gap-2 mb-4">
+                  <span class="material-icons text-purple-600">psychology</span>
+                  <h3 class="text-lg font-semibold text-lawyer-dark">Suggestions IA Prédictives</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <!-- Durée suggérée -->
+                  @if (selectedDossier()?.iaPrediction?.dureeSuggeree) {
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="material-icons text-blue-500 text-lg">schedule</span>
+                        <span class="text-sm font-medium text-blue-700">Durée estimée</span>
+                      </div>
+                      <p class="text-xl font-bold text-blue-800">{{ selectedDossier()?.iaPrediction?.dureeSuggeree }} jours</p>
+                      <p class="text-xs text-blue-600">Confiance: {{ selectedDossier()?.iaPrediction?.dureeConfiance }}%</p>
+                    </div>
+                  }
+
+                  <!-- Probabilité de succès -->
+                  @if (selectedDossier()?.iaPrediction?.probabiliteSuccess) {
+                    <div class="p-4 bg-green-50 rounded-xl border border-green-200">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="material-icons text-green-500 text-lg">trending_up</span>
+                        <span class="text-sm font-medium text-green-700">Probabilité de succès</span>
+                      </div>
+                      <p class="text-xl font-bold text-green-800">{{ selectedDossier()?.iaPrediction?.probabiliteSuccess }}%</p>
+                    </div>
+                  }
+
+                  <!-- Catégorie suggérée -->
+                  @if (selectedDossier()?.iaPrediction?.categorieSuggeree) {
+                    <div class="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="material-icons text-purple-500 text-lg">category</span>
+                        <span class="text-sm font-medium text-purple-700">Catégorie suggérée</span>
+                      </div>
+                      <p class="text-xl font-bold text-purple-800">{{ selectedDossier()?.iaPrediction?.categorieSuggeree }}</p>
+                      <p class="text-xs text-purple-600">Confiance: {{ selectedDossier()?.iaPrediction?.confiance }}%</p>
+                    </div>
+                  }
+                </div>
+
+                <!-- Avocat recommandé -->
+                @if (selectedDossier()?.iaPrediction?.avocatRecommandeNom) {
+                  <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-200 mb-4">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="material-icons text-indigo-500 text-lg">person</span>
+                      <span class="text-sm font-medium text-indigo-700">Avocat recommandé</span>
+                    </div>
+                    <p class="font-semibold text-indigo-800">{{ selectedDossier()?.iaPrediction?.avocatRecommandeNom }}</p>
+                  </div>
+                }
+
+                <!-- Documents suggérés -->
+                @if (selectedDossier()?.iaPrediction?.documentsSuggernes?.length) {
+                  <div class="p-4 bg-orange-50 rounded-xl border border-orange-200 mb-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="material-icons text-orange-500 text-lg">description</span>
+                      <span class="text-sm font-medium text-orange-700">Documents suggérés</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      @for (doc of selectedDossier()?.iaPrediction?.documentsSuggernes; track doc) {
+                        <span class="px-2 py-1 text-xs rounded-full bg-white border border-orange-200 text-orange-700">
+                          {{ doc }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Planning suggéré -->
+                @if (selectedDossier()?.iaPrediction?.planningSuggere) {
+                  <div class="p-4 bg-teal-50 rounded-xl border border-teal-200">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="material-icons text-teal-500 text-lg">timeline</span>
+                      <span class="text-sm font-medium text-teal-700">Planning suggéré</span>
+                    </div>
+                    <div class="space-y-2">
+                      @for (step of selectedDossier()?.iaPrediction?.planningSuggere?.etapes?.slice(0, 5); track step.etape) {
+                        <div class="flex items-center gap-2 text-xs">
+                          <span class="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-medium">{{ step.ordre }}</span>
+                          <span class="flex-1 text-slate-700">{{ step.etape }}</span>
+                          <span class="text-slate-500">{{ step.delai }} jours</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
             <!-- Historique -->
             @if (selectedDossier()?.historique && selectedDossier()!.historique.length > 0) {
               <div>
@@ -613,10 +707,24 @@ export class DossiersListComponent implements OnInit {
     return labels[action] || action;
   }
 
+  hasIAPrediction(): boolean {
+    const pred = this.selectedDossier()?.iaPrediction;
+    return !!(pred?.categorieSuggeree || pred?.dureeSuggeree || pred?.probabiliteSuccess || pred?.documentsSuggernes?.length || pred?.planningSuggere);
+  }
+
   viewDossier(dossier: Dossier) {
     console.log('Opening dossier:', dossier._id, dossier.numero);
-    this.selectedDossier.set(dossier);
-    this.loadDossierDocuments(dossier._id);
+    this.dossierService.getDossierById(dossier._id).subscribe({
+      next: (fullDossier) => {
+        this.selectedDossier.set(fullDossier);
+        this.loadDossierDocuments(dossier._id);
+      },
+      error: (err) => {
+        console.error('Error loading dossier details:', err);
+        this.selectedDossier.set(dossier);
+        this.loadDossierDocuments(dossier._id);
+      }
+    });
   }
 
   loadDossierDocuments(dossierId: string) {

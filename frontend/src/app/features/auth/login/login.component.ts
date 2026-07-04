@@ -34,7 +34,9 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
 
             <div class="tagline fade-in" style="animation-delay: 0.1s">
-              <h2>Gestion Juridique Intelligente</h2>
+              <h2 class="typewriter">
+                {{ displayText }}
+              </h2>
               <p>Solution numérique pour le suivi automatisé de vos dossiers avec traçabilité complète.</p>
             </div>
 
@@ -157,6 +159,21 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       </div>
     </div>
+
+    <script>
+      const text = "Gestion Juridique Intelligente";
+      let i = 0;
+
+      function typeWriter() {
+        if (i < text.length) {
+          document.getElementById("typewriter").innerHTML += text.charAt(i);
+          i++;
+          setTimeout(typeWriter, 80); // vitesse
+        }
+      }
+
+      window.addEventListener("load", typeWriter);
+    </script>
   `,
 styles: [`
     * {
@@ -164,6 +181,7 @@ styles: [`
       padding: 0;
       box-sizing: border-box;
     }
+    
 
     :host {
       display: block;
@@ -172,6 +190,20 @@ styles: [`
       position: fixed;
       top: 0;
       left: 0;
+    }
+    .typewriter {
+      display: inline-block;
+      border-right: 2px solid #000;
+      white-space: pre-line;
+      overflow: hidden;
+      animation: blinkCursor 0.7s infinite;
+      max-width: 100%;
+    }
+
+    @keyframes blinkCursor {
+      50% {
+          border-color: transparent;
+      }
     }
 
     .page-container {
@@ -909,6 +941,43 @@ export class LoginComponent {
 
   private authService = inject(AuthService);
   private router = inject(Router);
+  text = "Gestion Juridique\nIntelligente";
+  displayText = "";
+  i = 0;
+  typing = true;
+  ngOnInit() {
+    this.loopTypewriter();
+  }
+
+  loopTypewriter() {
+    if (this.typing) {
+
+      // phase écriture
+      if (this.i < this.text.length) {
+        this.displayText += this.text.charAt(this.i);
+        this.i++;
+        setTimeout(() => this.loopTypewriter(), 80);
+      } 
+      else {
+        // pause puis effacement
+        this.typing = false;
+        setTimeout(() => this.erase(), 1500);
+      }
+    }
+  }
+
+  erase() {
+    if (this.displayText.length > 0) {
+      this.displayText = this.displayText.slice(0, -1);
+      setTimeout(() => this.erase(), 40);
+    } 
+    else {
+      // reset et recommencer
+      this.i = 0;
+      this.typing = true;
+      this.loopTypewriter();
+    }
+  }
 
   togglePassword() {
     this.showPassword.update(v => !v);

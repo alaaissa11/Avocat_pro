@@ -43,77 +43,77 @@
   }
 
   /* Override Angular Input Styles */
-input.input-field {
-  border-width: 2px !important;
-  border-radius: 12px !important;
-  padding: 10px 16px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  color: #334155 !important;
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  transition: all 0.2s ease !important;
-  box-shadow: none !important;
-}
+  input.input-field {
+    border-width: 2px !important;
+    border-radius: 12px !important;
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+  }
 
-input.input-field::placeholder {
-  color: #94a3b8 !important;
-}
+  input.input-field::placeholder {
+    color: #94a3b8 !important;
+  }
 
-input.input-field:hover {
-  border-color: #cbd5e1 !important;
-}
+  input.input-field:hover {
+    border-color: #cbd5e1 !important;
+  }
 
-input.input-field:focus {
-  outline: none !important;
-  border-color: #4f46e5 !important;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
-}
+  input.input-field:focus {
+    outline: none !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+  }
 
   /* Override Angular Material Select Styles */
-select.select-field {
-  border-width: 2px !important;
-  border-radius: 12px !important;
-  padding-top: 10px !important;
-  padding-bottom: 10px !important;
-  padding-right: 48px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  color: #334155 !important;
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
-  background-repeat: no-repeat !important;
-  background-position: right 12px center !important;
-  background-size: 20px !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  transition: all 0.2s ease !important;
-  box-shadow: none !important;
-}
+  select.select-field {
+    border-width: 2px !important;
+    border-radius: 12px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    padding-right: 48px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 20px !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+  }
 
-select.select-field:hover {
-  border-color: #cbd5e1 !important;
-  background-color: #f8fafc !important;
-}
+  select.select-field:hover {
+    border-color: #cbd5e1 !important;
+    background-color: #f8fafc !important;
+  }
 
-select.select-field:focus {
-  outline: none !important;
-  border-color: #4f46e5 !important;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
-}
+  select.select-field:focus {
+    outline: none !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+  }
 
-select.select-field option {
-  padding: 12px !important;
-  font-size: 14px !important;
-  background-color: white !important;
-  color: #334155 !important;
-}
+  select.select-field option {
+    padding: 12px !important;
+    font-size: 14px !important;
+    background-color: white !important;
+    color: #334155 !important;
+  }
 
-select.select-field option:hover {
-  background-color: #f3f4f6 !important;
-}
+  select.select-field option:hover {
+    background-color: #f3f4f6 !important;
+  }
 
   .sidebar-link {
     @apply flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600

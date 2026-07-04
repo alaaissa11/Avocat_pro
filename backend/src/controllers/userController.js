@@ -2,6 +2,82 @@ const User = require('../models/User');
 const Collaborateur = require('../models/Collaborateur');
 const Operation = require('../models/Operation');
 
+const defaultPermissions = {
+  admin: ['read', 'write', 'delete', 'manage_users', 'manage_dossiers', 'manage_clients', 'view_stats'],
+  avocat: ['read', 'write', 'delete', 'manage_dossiers', 'manage_clients', 'view_stats'],
+  collaborateur: ['read', 'write', 'manage_dossiers', 'manage_clients'],
+  assistant: ['read', 'write', 'manage_dossiers', 'manage_clients'],
+  secretaire: ['read', 'manage_clients']
+};
+
+exports.createUser = async (req, res) => {
+  try {
+    const { email, password, nom, prenom, role, telephone, specialite, tauxHoraire } = req.body;
+
+    if (!email || !password || !nom || !prenom) {
+      return res.status(400).json({ message: 'Champs requis manquants (email, password, nom, prenom)' });
+    }
+    if (String(password).length < 8) {
+      return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 8 caractères' });
+    }
+    const validRoles = ['admin', 'avocat', 'collaborateur', 'assistant', 'secretaire'];
+    if (role && !validRoles.includes(role)) {
+      return res.status(400).json({ message: `Rôle invalide. Valeurs acceptées : ${validRoles.join(', ')}` });
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Un utilisateur avec cet email existe déjà' });
+    }
+
+    const userRole = role || 'assistant';
+    const user = new User({
+      email,
+      password,
+      nom,
+      prenom,
+      role: userRole,
+      telephone,
+      permissions: defaultPermissions[userRole] || ['read']
+    });
+    await user.save();
+
+    // Création automatique d'une fiche Collaborateur pour les rôles opérationnels
+    let collaborateur = null;
+    if (['avocat', 'collaborateur', 'assistant'].includes(userRole)) {
+      collaborateur = new Collaborateur({
+        userId: user._id,
+        specialite: Array.isArray(specialite) ? specialite : (specialite ? [specialite] : []),
+        tauxHoraire: tauxHoraire || 0
+      });
+      await collaborateur.save();
+    }
+
+    await new Operation({
+      type: 'utilisateur_cree',
+      entiteType: 'user',
+      entiteId: user._id,
+      userId: req.user._id,
+      userEmail: req.user.email,
+      details: `Utilisateur ${user.email} créé (rôle: ${userRole})`
+    }).save();
+
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.status(201).json({
+      message: 'Utilisateur créé avec succès',
+      user: userResponse,
+      collaborateur
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ message: 'Email déjà utilisé' });
+    }
+    res.status(500).json({ message: 'Erreur lors de la création de l\'utilisateur', error: error.message });
+  }
+};
+
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 });

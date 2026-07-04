@@ -105,18 +105,15 @@ const TYPICAL_DOCUMENTS = {
 };
 
 const findSimilarDossiers = async (keywords, typeAffaire, limit = 10) => {
-  const closedDossiers = await Dossier.find({
-    statut: 'cloture',
-    $or: [
-      { typeAffaire },
-      { typeAffaire: { $exists: false } }
-    ]
+  const allDossiers = await Dossier.find({
+    typeAffaire,
+    _id: { $exists: true }
   })
     .populate('assigneA', 'nom prenom role')
-    .select('titre description typeAffaire dateCreation dateCloture priorite assigneA chargeEstimee chargeConsommee')
+    .select('titre description typeAffaire dateCreation dateCloture priorite assigneA chargeEstimee chargeConsommee statut')
     .limit(100);
 
-  const scoredDossiers = closedDossiers.map(dossier => {
+  const scoredDossiers = allDossiers.map(dossier => {
     const dossierKeywords = extractKeywords(`${dossier.titre} ${dossier.description || ''}`);
     const similarityScore = calculateSimilarityScore(keywords, dossierKeywords);
     
@@ -128,7 +125,7 @@ const findSimilarDossiers = async (keywords, typeAffaire, limit = 10) => {
   });
 
   return scoredDossiers
-    .filter(d => d.similarite > 10)
+    .filter(d => d.similarite > 0)
     .sort((a, b) => b.similarite - a.similarite)
     .slice(0, limit);
 };

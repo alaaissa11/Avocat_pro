@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   prenom: { type: String, required: true },
   role: {
     type: String,
-    enum: ['admin', 'avocat', 'assistant', 'secretaire'],
+    enum: ['admin', 'avocat', 'collaborateur', 'assistant', 'secretaire'],
     default: 'assistant'
   },
   permissions: [{

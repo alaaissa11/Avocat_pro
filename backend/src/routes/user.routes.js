@@ -26,6 +26,38 @@ router.get('/', auth, checkPermission('manage_users'), userController.getUsers);
 
 /**
  * @swagger
+ * /api/users:
+ *   post:
+ *     summary: Create a new user (admin/avocat only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, nom, prenom]
+ *             properties:
+ *               email: { type: string }
+ *               password: { type: string }
+ *               nom: { type: string }
+ *               prenom: { type: string }
+ *               role: { type: string, enum: [admin, avocat, collaborateur, assistant, secretaire] }
+ *               telephone: { type: string }
+ *               specialite: { type: array, items: { type: string } }
+ *               tauxHoraire: { type: number }
+ *     responses:
+ *       201:
+ *         description: User created
+ *       409:
+ *         description: Email already in use
+ */
+router.post('/', auth, authorize('admin', 'avocat'), userController.createUser);
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: Get user by ID

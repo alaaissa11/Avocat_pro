@@ -10,17 +10,17 @@ import { AuthService } from './core/services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SidebarComponent, HeaderComponent],
   template: `
-    <div class="flex h-screen bg-slate-50">
+    <div class="flex h-screen bg-navy-900">
       @if (showLayout()) {
         <app-sidebar />
         <div class="flex-1 flex flex-col overflow-hidden ml-64">
           <app-header />
-          <main class="flex-1 overflow-y-auto p-6 bg-slate-50">
+          <main class="flex-1 overflow-y-auto p-6 bg-gradient-professional">
             <router-outlet />
           </main>
         </div>
       } @else {
-        <div class="w-full min-h-screen flex justify-center items-center">
+        <div class="w-full min-h-screen flex justify-center items-center bg-gradient-professional">
           <router-outlet />
         </div>
       }

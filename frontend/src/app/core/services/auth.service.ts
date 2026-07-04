@@ -73,6 +73,38 @@ export class AuthService {
     return localStorage.getItem('avocat_pro_token');
   }
 
+  /**
+   * Vérifie si l'utilisateur courant a le rôle demandé.
+   * @example hasRole('admin') | hasRole(['admin','avocat'])
+   */
+  hasRole(roleOrRoles: string | string[]): boolean {
+    const current = this.currentUser()?.role;
+    if (!current) return false;
+    return Array.isArray(roleOrRoles) ? roleOrRoles.includes(current) : current === roleOrRoles;
+  }
+
+  /**
+   * Rôles ayant accès aux modules "métier" (Dossiers, Clients, Documents, Calendrier).
+   * Admin et Avocat ont l'accès complet. Collaborateur/Assistant/Secrétaire sont limités.
+   */
+  canAccessBusinessModules(): boolean {
+    return this.hasRole(['admin', 'avocat']);
+  }
+
+  /**
+   * Rôles ayant accès à la gestion de l'équipe (créer / inviter des membres).
+   */
+  canManageTeam(): boolean {
+    return this.hasRole(['admin', 'avocat']);
+  }
+
+  /**
+   * Rôles ayant accès à la gestion globale des paramètres du cabinet.
+   */
+  canManageSettings(): boolean {
+    return this.hasRole('admin');
+  }
+
   getProfile(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/profile`);
   }

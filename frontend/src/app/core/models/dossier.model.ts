@@ -12,6 +12,16 @@ export interface IAPrediction {
   categorieSuggeree?: string;
   confiance?: number;
   datePrediction?: Date;
+  dureeSuggeree?: number;
+  dureeConfiance?: number;
+  probabiliteSuccess?: number;
+  avocatRecommandeId?: string;
+  avocatRecommandeNom?: string;
+  documentsSuggernes?: string[];
+  planningSuggere?: {
+    etapes: Array<{ etape: string; delai: number; ordre: number }>;
+    dureeTotale?: number;
+  };
 }
 
 export interface HistoriqueItem {

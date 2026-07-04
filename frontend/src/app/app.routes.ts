@@ -58,6 +58,21 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'taches',
+    loadComponent: () => import('./features/taches/taches-list/taches-list.component').then(m => m.TachesListComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'mon-espace',
+    loadComponent: () => import('./features/mon-espace/mon-espace.component').then(m => m.MonEspaceComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'collaborateurs',
+    loadComponent: () => import('./features/collaborateurs/collaborateurs-list/collaborateurs-list.component').then(m => m.CollaborateursListComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
     canActivate: [authGuard]
