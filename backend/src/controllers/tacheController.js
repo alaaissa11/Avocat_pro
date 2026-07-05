@@ -1,8 +1,43 @@
 const Tache = require('../models/Tache');
 const Operation = require('../models/Operation');
+const Dossier = require('../models/Dossier');
+
+const buildTacheScopeForUser = (user) => {
+  if (user.role === 'admin') return {};
+  return {
+    $or: [
+      { assigneeA: user._id },
+      { creePar: user._id }
+    ]
+  };
+};
+
+const isTacheInScope = async (tache, user) => {
+  if (user.role === 'admin') return true;
+  if (!tache) return false;
+  if (tache.assigneeA && tache.assigneeA.toString() === user._id.toString()) return true;
+  if (tache.creePar && tache.creePar.toString() === user._id.toString()) return true;
+  return false;
+};
 
 exports.createTache = async (req, res) => {
   try {
+    const { dossierId, assigneeA } = req.body;
+
+    if (dossierId && assigneeA) {
+      const dossier = await Dossier.findById(dossierId);
+      if (!dossier) {
+        return res.status(404).json({ message: 'Dossier non trouvé' });
+      }
+      const isDossierInScope = req.user.role === 'admin' ||
+        dossier.assigneA?.toString() === req.user._id.toString() ||
+        dossier.createdBy?.toString() === req.user._id.toString() ||
+        dossier.collaboreurs?.some(id => id.toString() === req.user._id.toString());
+      if (!isDossierInScope) {
+        return res.status(403).json({ message: 'Vous ne pouvez pas créer une tâche pour un dossier hors de votre périmètre.' });
+      }
+    }
+
     const tache = new Tache({ ...req.body, creePar: req.user._id });
     await tache.save();
     res.status(201).json(tache);
@@ -20,6 +55,16 @@ exports.getTaches = async (req, res) => {
     if (assigneeTo) query.assigneeA = assigneeTo;
     if (dossierId) query.dossierId = dossierId;
     if (priorite) query.priorite = parseInt(priorite);
+
+    const scope = buildTacheScopeForUser(req.user);
+    if (Object.keys(scope).length > 0) {
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, scope];
+        delete query.$or;
+      } else {
+        Object.assign(query, scope);
+      }
+    }
 
     const taches = await Tache.find(query)
       .populate('assigneeA', 'nom prenom')
@@ -49,6 +94,9 @@ exports.getTacheById = async (req, res) => {
     if (!tache) {
       return res.status(404).json({ message: 'Tache not found' });
     }
+    if (!(await isTacheInScope(tache, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé à cette tâche.' });
+    }
     res.json(tache);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching tache', error: error.message });
@@ -57,6 +105,13 @@ exports.getTacheById = async (req, res) => {
 
 exports.updateTache = async (req, res) => {
   try {
+    const existing = await Tache.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Tache not found' });
+    }
+    if (!(await isTacheInScope(existing, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé à cette tâche.' });
+    }
     const tache = await Tache.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
     await new Operation({
@@ -76,6 +131,13 @@ exports.updateTache = async (req, res) => {
 
 exports.deleteTache = async (req, res) => {
   try {
+    const existing = await Tache.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Tache not found' });
+    }
+    if (!(await isTacheInScope(existing, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé à cette tâche.' });
+    }
     await Tache.findByIdAndDelete(req.params.id);
     res.json({ message: 'Tache deleted successfully' });
   } catch (error) {

@@ -150,6 +150,24 @@
             </select>
           </div>
 
+          <!-- Avocat Responsable -->
+          @if (availableAvocats().length > 0) {
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Avocat responsable</label>
+              <select
+                [(ngModel)]="selectedAvocatId"
+                name="assigneA"
+                class="select-field modern-select"
+                style="border-radius: 12px; border: 2px solid #e2e8f0; padding: 10px 40px 10px 16px; font-size: 14px; font-weight: 500; color: #334155; background: white url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236b7280%22%3E%3Cpath%20stroke-linecap%3D%22round%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222.5%22%20d%3D%22M19%209l-7%207-7-7%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E') no-repeat right 12px center/20px; appearance: none; -webkit-appearance: none; -moz-appearance: none; transition: all 0.2s;"
+              >
+                <option value="">Sélectionnez un avocat...</option>
+                @for (avocat of availableAvocats(); track avocat._id) {
+                  <option [value]="avocat._id">{{ avocat.prenom }} {{ avocat.nom }}</option>
+                }
+              </select>
+            </div>
+          }
+
           <!-- Sous-type -->
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">Sous-type</label>

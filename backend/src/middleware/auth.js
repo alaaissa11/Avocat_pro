@@ -21,6 +21,8 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'Account is deactivated' });
     }
 
+    console.log('[Auth] User:', user.email, 'role:', user.role, '_id:', user._id);
+    
     req.user = user;
     req.token = token;
     next();

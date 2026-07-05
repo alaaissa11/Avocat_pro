@@ -25,12 +25,35 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ message: `Rôle invalide. Valeurs acceptées : ${validRoles.join(', ')}` });
     }
 
+    // Qui peut créer quoi ?
+    // - admin : peut créer un avocat, ou un collaborateur/assistant
+    // - avocat : peut créer un collaborateur ou assistant uniquement
+    // - les autres rôles : ne peuvent pas créer d'utilisateurs (refus 403)
+    const callerRole = req.user.role;
+    const userRole = role || 'collaborateur';
+    if (callerRole !== 'admin') {
+      if (callerRole !== 'avocat') {
+        return res.status(403).json({ message: 'Seuls les administrateurs et avocats peuvent créer des membres.' });
+      }
+      // Un avocat ne peut pas créer un autre admin ni un autre avocat
+      if (userRole === 'admin' || userRole === 'avocat') {
+        return res.status(403).json({ message: 'Un avocat ne peut pas créer un administrateur ni un autre avocat.' });
+      }
+    }
+    if (userRole === 'admin' && callerRole !== 'admin') {
+      return res.status(403).json({ message: 'Seul un administrateur peut créer un autre administrateur.' });
+    }
+
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(409).json({ message: 'Un utilisateur avec cet email existe déjà' });
     }
 
-    const userRole = role || 'assistant';
+    // ownerId = celui qui a créé le compte.
+    // - Si l'appelant est admin et qu'il crée un admin : on refuse déjà au-dessus,
+    //   donc dans tous les cas ownerId = req.user._id ici.
+    // - Si l'appelant est admin et qu'il crée un avocat : ownerId = req.user._id
+    // - Si l'appelant est avocat et qu'il crée un collaborateur : ownerId = req.user._id
     const user = new User({
       email,
       password,
@@ -38,6 +61,7 @@ exports.createUser = async (req, res) => {
       prenom,
       role: userRole,
       telephone,
+      ownerId: req.user._id,
       permissions: defaultPermissions[userRole] || ['read']
     });
     await user.save();
@@ -80,7 +104,30 @@ exports.createUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    // - admin : voit tous les users
+    // - avocat : voit les users qu'il a créés (ownerId = lui), plus lui-même
+    // - collaborateur/assistant/secretaire : ne devrait pas appeler cette route (filtré en amont),
+    //   mais on retourne au minimum les users accessibles (lui-même + son owner admin/avocat)
+    const callerRole = req.user.role;
+    let users;
+    if (callerRole === 'admin') {
+      users = await User.find().select('-password').sort({ createdAt: -1 });
+    } else {
+      // Liste des users dans le périmètre : ownerId = moi, OU moi-même, OU l'admin
+      // (pour qu'un avocat puisse afficher l'admin dans la liste d'affectation d'un dossier,
+      //  et qu'un collaborateur voie au moins son avocat/owner)
+      const admin = await User.findOne({ email: 'avocat@avocat-pro.tn' }).select('_id').lean();
+      const idsInScope = [req.user._id];
+      if (admin) idsInScope.push(admin._id);
+      users = await User.find({
+        $or: [
+          { _id: { $in: idsInScope } },
+          { ownerId: req.user._id }
+        ]
+      })
+        .select('-password')
+        .sort({ createdAt: -1 });
+    }
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching users', error: error.message });
@@ -89,11 +136,27 @@ exports.getUsers = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    // Tout le monde peut voir son propre profil
+    if (req.params.id === req.user._id.toString()) {
+      const me = await User.findById(req.params.id).select('-password');
+      if (!me) return res.status(404).json({ message: 'User not found' });
+      return res.json(me);
     }
-    res.json(user);
+    // Admin : accès total
+    if (req.user.role === 'admin') {
+      const user = await User.findById(req.params.id).select('-password');
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      return res.json(user);
+    }
+    // Avocat : peut voir ses collaborateurs (ownerId = lui) et l'admin
+    const target = await User.findById(req.params.id).select('-password');
+    if (!target) return res.status(404).json({ message: 'User not found' });
+    const isOwner = target.ownerId && target.ownerId.toString() === req.user._id.toString();
+    const isAdmin = target.email === 'avocat@avocat-pro.tn';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Accès refusé à ce profil.' });
+    }
+    return res.json(target);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching user', error: error.message });
   }
@@ -102,11 +165,26 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { role, permissions, isActive } = req.body;
+    // Refuser la mise à jour d'un user hors périmètre
+    if (req.params.id !== req.user._id.toString() && req.user.role !== 'admin') {
+      const target = await User.findById(req.params.id).select('ownerId email');
+      if (!target) return res.status(404).json({ message: 'User not found' });
+      const isOwner = target.ownerId && target.ownerId.toString() === req.user._id.toString();
+      if (!isOwner) {
+        return res.status(403).json({ message: 'Accès refusé à la modification de ce profil.' });
+      }
+    }
+    // Un non-admin ne peut pas promouvoir au rôle admin
+    if (role === 'admin' && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Seul un administrateur peut attribuer le rôle admin.' });
+    }
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { role, permissions, isActive },
       { new: true }
     ).select('-password');
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     await new Operation({
       type: 'utilisateur_modifie',
@@ -125,6 +203,17 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
+    if (req.params.id === req.user._id.toString()) {
+      return res.status(400).json({ message: 'Vous ne pouvez pas supprimer votre propre compte.' });
+    }
+    if (req.user.role !== 'admin') {
+      const target = await User.findById(req.params.id).select('ownerId');
+      if (!target) return res.status(404).json({ message: 'User not found' });
+      const isOwner = target.ownerId && target.ownerId.toString() === req.user._id.toString();
+      if (!isOwner) {
+        return res.status(403).json({ message: 'Accès refusé : cet utilisateur n\'est pas dans votre équipe.' });
+      }
+    }
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'User deleted successfully' });
   } catch (error) {

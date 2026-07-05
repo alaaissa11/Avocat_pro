@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Document = require('../models/Document');
 const Operation = require('../models/Operation');
+const Dossier = require('../models/Dossier');
 const fs = require('fs');
 const path = require('path');
 
@@ -9,6 +10,49 @@ const uploadDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+
+const buildDocumentScopeForUser = async (user) => {
+  if (user.role === 'admin') return {};
+
+  const userId = user._id;
+  const dossierScope = {
+    $or: [
+      { assigneA: userId },
+      { collaboreurs: userId },
+      { createdBy: userId }
+    ]
+  };
+
+  const userDossiers = await Dossier.find(dossierScope).select('_id').lean();
+  
+  const dossierIds = userDossiers.map(d => d._id);
+
+  if (dossierIds.length === 0) {
+    return { _id: null };
+  }
+
+  return {
+    $or: [
+      { dossierId: { $in: dossierIds } },
+      { uploadedBy: userId }
+    ]
+  };
+};
+
+const isDocumentInScope = async (doc, user) => {
+  if (user.role === 'admin') return true;
+  if (!doc) return false;
+  if (doc.uploadedBy && doc.uploadedBy.toString() === user._id.toString()) return true;
+  if (doc.dossierId) {
+    const dossier = await Dossier.findById(doc.dossierId);
+    if (dossier) {
+      if (dossier.assigneA?.toString() === user._id.toString()) return true;
+      if (dossier.createdBy?.toString() === user._id.toString()) return true;
+      if (dossier.collaboreurs?.some(id => id.toString() === user._id.toString())) return true;
+    }
+  }
+  return false;
+};
 
 exports.uploadDocument = async (req, res) => {
   try {
@@ -89,10 +133,20 @@ exports.getDocuments = async (req, res) => {
 
     if (type) query.type = type;
     if (dossierId) {
-      console.log('Filtering by dossierId:', dossierId);
       query.dossierId = new mongoose.Types.ObjectId(dossierId);
     }
     if (clientId) query.clientId = clientId;
+
+    const scope = await buildDocumentScopeForUser(req.user);
+    
+    if (Object.keys(scope).length > 0) {
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, scope];
+        delete query.$or;
+      } else {
+        Object.assign(query, scope);
+      }
+    }
 
     const documents = await Document.find(query)
       .populate('uploadedBy', 'nom prenom')
@@ -122,6 +176,9 @@ exports.getDocumentById = async (req, res) => {
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
     }
+    if (!(await isDocumentInScope(document, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé à ce document.' });
+    }
     res.json(document);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching document', error: error.message });
@@ -134,6 +191,9 @@ exports.downloadDocument = async (req, res) => {
 
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
+    }
+    if (!(await isDocumentInScope(document, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé à ce document.' });
     }
 
     if (!fs.existsSync(document.chemin)) {
@@ -150,7 +210,14 @@ exports.deleteDocument = async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);
 
-    if (document && fs.existsSync(document.chemin)) {
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+    if (!(await isDocumentInScope(document, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé à ce document.' });
+    }
+
+    if (fs.existsSync(document.chemin)) {
       fs.unlinkSync(document.chemin);
     }
 

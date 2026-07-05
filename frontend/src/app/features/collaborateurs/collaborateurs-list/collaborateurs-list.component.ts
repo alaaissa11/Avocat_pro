@@ -281,7 +281,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <div class="mb-4">
                 <label class="form-label">Rôle <span class="text-red-500">*</span></label>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  @for (r of roleOptions; track r.value) {
+                  @for (r of allowedRoles; track r.value) {
                     <button type="button"
                             (click)="form.role = r.value"
                             [ngClass]="form.role === r.value
@@ -426,6 +426,17 @@ export class CollaborateursListComponent implements OnInit {
     { value: 'assistant' as const,      label: 'Assistant',      icon: 'support_agent' },
     { value: 'secretaire' as const,     label: 'Secrétaire',     icon: 'edit_note' },
   ];
+
+  get allowedRoles() {
+    const currentRole = this.authService.currentUser()?.role;
+    if (currentRole === 'admin') {
+      return this.roleOptions;
+    }
+    if (currentRole === 'avocat') {
+      return this.roleOptions.filter(r => r.value === 'collaborateur' || r.value === 'assistant' || r.value === 'secretaire');
+    }
+    return [];
+  }
 
   private allPermissions: Record<string, string[]> = {
     admin: ['read', 'write', 'delete', 'manage_users', 'manage_dossiers', 'manage_clients', 'view_stats'],

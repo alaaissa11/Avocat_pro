@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String },
   isActive: { type: Boolean, default: true },
   lastLogin: { type: Date },
+  // Hiérarchie : ownerId pointe vers le user qui a créé ce user.
+  // - admin (avocat@avocat-pro.tn) : ownerId = null
+  // - avocat créé par admin : ownerId = admin._id
+  // - collaborateur créé par avocat : ownerId = avocat._id
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

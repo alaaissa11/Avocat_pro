@@ -2,13 +2,55 @@ const Dossier = require('../models/Dossier');
 const Operation = require('../models/Operation');
 const iaService = require('../services/iaService');
 
+/**
+ * Construit la condition MongoDB qui limite un dossier à un user donné.
+ * Un dossier est accessible si :
+ *  - l'user en est le créateur
+ *  - l'user est `assigneA`
+ *  - l'user est dans `collaboreurs`
+ * (admin : pas de condition, on retourne tout)
+ */
+const buildDossierScopeForUser = (user) => {
+  if (user.role === 'admin') return {};
+  return {
+    $or: [
+      { assigneA: user._id },
+      { collaboreurs: user._id },
+      { createdBy: user._id }
+    ]
+  };
+};
+
+const isDossierInScope = async (dossier, user) => {
+  if (user.role === 'admin') return true;
+  if (!dossier) return false;
+  if (dossier.assigneA && dossier.assigneA.toString() === user._id.toString()) return true;
+  if (dossier.createdBy && dossier.createdBy.toString() === user._id.toString()) return true;
+  if (Array.isArray(dossier.collaboreurs) &&
+      dossier.collaboreurs.some(id => id.toString() === user._id.toString())) {
+    return true;
+  }
+  return false;
+};
+
 exports.createDossier = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
       return res.status(401).json({ message: 'Authentication required' });
     }
-    
-    const dossier = new Dossier({ ...req.body, createdBy: req.user._id });
+
+    // Un non-admin ne peut pas créer de dossier pour quelqu'un d'autre.
+    // Il ne peut pas non plus créer de dossier s'il n'est pas admin/avocat.
+    if (req.user.role !== 'admin' && req.user.role !== 'avocat') {
+      return res.status(403).json({ message: 'Seuls les administrateurs et avocats peuvent créer des dossiers.' });
+    }
+    const body = { ...req.body };
+    if (req.user.role !== 'admin') {
+      // L'avocat crée forcément un dossier dont il est responsable
+      body.assigneA = req.user._id;
+    }
+    // L'admin peut créer un dossier sans avocat assigné (assigneA reste undefined/null)
+    const dossier = new Dossier({ ...body, createdBy: req.user._id });
 
     if (dossier.description) {
       const iaPrediction = await iaService.predictCategory(dossier.description);
@@ -44,6 +86,18 @@ exports.getDossiers = async (req, res) => {
     if (priorite) query.priorite = parseInt(priorite);
     if (assigneeTo) query.assigneA = assigneeTo;
 
+    // Filtre par périmètre
+    const scope = buildDossierScopeForUser(req.user);
+    if (Object.keys(scope).length > 0) {
+      if (query.$or) {
+        // $and : (filtres saisis) ET (périmètre)
+        query.$and = [{ $or: query.$or }, scope];
+        delete query.$or;
+      } else {
+        Object.assign(query, scope);
+      }
+    }
+
     const dossiers = await Dossier.find(query)
       .populate('clientId', 'nom prenom')
       .populate('assigneA', 'nom prenom')
@@ -73,6 +127,9 @@ exports.getDossierById = async (req, res) => {
     if (!dossier) {
       return res.status(404).json({ message: 'Dossier not found' });
     }
+    if (!(await isDossierInScope(dossier, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé à ce dossier.' });
+    }
     res.json(dossier);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching dossier', error: error.message });
@@ -81,7 +138,20 @@ exports.getDossierById = async (req, res) => {
 
 exports.updateDossier = async (req, res) => {
   try {
-    const oldDossier = await Dossier.findById(req.params.id);
+    const existing = await Dossier.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Dossier not found' });
+    }
+    if (!(await isDossierInScope(existing, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé : dossier hors de votre périmètre.' });
+    }
+    // Un non-admin ne peut pas changer le `assigneA` pour le faire pointer sur
+    // un user hors de son périmètre
+    if (req.user.role !== 'admin' && req.body.assigneA &&
+        req.body.assigneA.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Vous ne pouvez affecter un dossier qu\'à vous-même.' });
+    }
+    const oldDossier = existing;
     const dossier = await Dossier.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
     dossier.addToHistory(
@@ -101,6 +171,13 @@ exports.updateDossier = async (req, res) => {
 
 exports.deleteDossier = async (req, res) => {
   try {
+    const existing = await Dossier.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Dossier not found' });
+    }
+    if (!(await isDossierInScope(existing, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé : dossier hors de votre périmètre.' });
+    }
     await Dossier.findByIdAndDelete(req.params.id);
     res.json({ message: 'Dossier deleted successfully' });
   } catch (error) {
@@ -111,8 +188,14 @@ exports.deleteDossier = async (req, res) => {
 exports.addCommentaire = async (req, res) => {
   try {
     const { commentaire } = req.body;
-    const dossier = await Dossier.findById(req.params.id);
-
+    const existing = await Dossier.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Dossier not found' });
+    }
+    if (!(await isDossierInScope(existing, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé : dossier hors de votre périmètre.' });
+    }
+    const dossier = existing;
     dossier.historique.push({
       action: 'commentaire',
       userId: req.user._id,
@@ -128,16 +211,29 @@ exports.addCommentaire = async (req, res) => {
 
 exports.getStats = async (req, res) => {
   try {
-    const total = await Dossier.countDocuments();
-    const nouveau = await Dossier.countDocuments({ statut: 'nouveau' });
-    const enCours = await Dossier.countDocuments({ statut: 'en_cours' });
-    const cloture = await Dossier.countDocuments({ statut: 'cloture' });
+    const baseMatch = buildDossierScopeForUser(req.user);
+    const total = await Dossier.countDocuments(baseMatch);
+    const matchNouveau = baseMatch.$or
+      ? { $and: [baseMatch, { statut: 'nouveau' }] }
+      : { statut: 'nouveau' };
+    const matchEnCours = baseMatch.$or
+      ? { $and: [baseMatch, { statut: 'en_cours' }] }
+      : { statut: 'en_cours' };
+    const matchCloture = baseMatch.$or
+      ? { $and: [baseMatch, { statut: 'cloture' }] }
+      : { statut: 'cloture' };
+
+    const nouveau = await Dossier.countDocuments(matchNouveau);
+    const enCours = await Dossier.countDocuments(matchEnCours);
+    const cloture = await Dossier.countDocuments(matchCloture);
 
     const byType = await Dossier.aggregate([
+      ...(baseMatch.$or ? [{ $match: baseMatch }] : []),
       { $group: { _id: '$typeAffaire', count: { $sum: 1 } } }
     ]);
 
     const byMonth = await Dossier.aggregate([
+      ...(baseMatch.$or ? [{ $match: baseMatch }] : []),
       {
         $group: {
           _id: { $dateToString: { format: '%Y-%m', date: '$dateCreation' } },

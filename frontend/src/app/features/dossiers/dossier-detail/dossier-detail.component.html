@@ -214,15 +214,50 @@
         </div>
 
         <!-- Avocat assigné -->
-        @if (dossier().assigneA) {
-          <div class="card">
-            <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-              <span class="material-icons text-lawyer-primary">gavel</span>
-              Avocat assigné
-            </h2>
-            <p class="font-medium text-slate-800">{{ dossier().assigneA.nom }} {{ dossier().assigneA.prenom }}</p>
-          </div>
-        }
+        <div class="card">
+          <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span class="material-icons text-lawyer-primary">gavel</span>
+            Avocat assigné
+          </h2>
+          @if (editingAssignee()) {
+            <div class="space-y-3">
+              <select [(ngModel)]="selectedAvocatId" class="select-field w-full">
+                <option value="">Sélectionnez un avocat...</option>
+                @for (avocat of availableAvocats(); track avocat._id) {
+                  <option [value]="avocat._id">{{ avocat.prenom }} {{ avocat.nom }}</option>
+                }
+              </select>
+              <div class="flex gap-2">
+                <button (click)="saveAssignee()"
+                        [disabled]="savingAssignee()"
+                        class="btn-primary flex-1 text-sm py-2">
+                  @if (savingAssignee()) {
+                    <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-1"></span>
+                  }
+                  Enregistrer
+                </button>
+                <button (click)="cancelEditAssignee()" class="btn-secondary flex-1 text-sm py-2">
+                  Annuler
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="flex items-center justify-between">
+              <p class="font-medium text-slate-800">
+                @if (dossier().assigneA) {
+                  {{ dossier().assigneA.nom }} {{ dossier().assigneA.prenom }}
+                } @else {
+                  <span class="text-slate-400">Non assigné</span>
+                }
+              </p>
+              @if (canEditAssignee()) {
+                <button (click)="startEditAssignee()" class="text-lawyer-primary hover:text-lawyer-dark text-sm">
+                  <span class="material-icons text-sm">edit</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
 
         <!-- Numéro RG -->
         @if (dossier().numeroRG) {

@@ -1,5 +1,28 @@
 const Calendrier = require('../models/Calendrier');
 const Operation = require('../models/Operation');
+const Dossier = require('../models/Dossier');
+
+const buildCalendrierScopeForUser = async (user) => {
+  if (user.role === 'admin') return {};
+
+  const dossierScope = {
+    $or: [
+      { assigneA: user._id },
+      { collaboreurs: user._id },
+      { createdBy: user._id }
+    ]
+  };
+
+  const userDossiers = await Dossier.find(dossierScope).select('_id').lean();
+  const dossierIds = userDossiers.map(d => d._id);
+
+  return {
+    $or: [
+      { dossierId: { $in: dossierIds } },
+      { createdBy: user._id }
+    ]
+  };
+};
 
 exports.createEvent = async (req, res) => {
   try {
@@ -24,6 +47,16 @@ exports.getEvents = async (req, res) => {
     if (type) query.type = type;
     if (dossierId) query.dossierId = dossierId;
 
+    const scope = await buildCalendrierScopeForUser(req.user);
+    if (Object.keys(scope).length > 0) {
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, scope];
+        delete query.$or;
+      } else {
+        Object.assign(query, scope);
+      }
+    }
+
     const events = await Calendrier.find(query)
       .populate('userId', 'nom prenom')
       .populate('assignes', 'nom prenom')
@@ -46,6 +79,17 @@ exports.getEventById = async (req, res) => {
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
+
+    const scope = await buildCalendrierScopeForUser(req.user);
+    if (Object.keys(scope).length > 0) {
+      const inScope = event.dossierId && scope.$or.some(or => 
+        or.dossierId && or.dossierId.$in && or.dossierId.$in.some(id => id.toString() === event.dossierId._id.toString())
+      );
+      if (!inScope && event.createdBy?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: 'Accès refusé à cet événement.' });
+      }
+    }
+
     res.json(event);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching event', error: error.message });
@@ -54,6 +98,21 @@ exports.getEventById = async (req, res) => {
 
 exports.updateEvent = async (req, res) => {
   try {
+    const existing = await Calendrier.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    const scope = await buildCalendrierScopeForUser(req.user);
+    if (Object.keys(scope).length > 0) {
+      const inScope = existing.dossierId && scope.$or.some(or => 
+        or.dossierId && or.dossierId.$in && or.dossierId.$in.some(id => id.toString() === existing.dossierId.toString())
+      );
+      if (!inScope && existing.createdBy?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: 'Accès refusé à cet événement.' });
+      }
+    }
+
     const event = await Calendrier.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
     await new Operation({
@@ -73,6 +132,23 @@ exports.updateEvent = async (req, res) => {
 
 exports.deleteEvent = async (req, res) => {
   try {
+    const existing = await Calendrier.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    if (req.user.role !== 'admin') {
+      const scope = await buildCalendrierScopeForUser(req.user);
+      if (Object.keys(scope).length > 0) {
+        const inScope = existing.dossierId && scope.$or.some(or => 
+          or.dossierId && or.dossierId.$in && or.dossierId.$in.some(id => id.toString() === existing.dossierId.toString())
+        );
+        if (!inScope && existing.createdBy?.toString() !== req.user._id.toString()) {
+          return res.status(403).json({ message: 'Accès refusé à cet événement.' });
+        }
+      }
+    }
+
     await Calendrier.findByIdAndDelete(req.params.id);
     res.json({ message: 'Event deleted successfully' });
   } catch (error) {
@@ -82,7 +158,14 @@ exports.deleteEvent = async (req, res) => {
 
 exports.getAudiences = async (req, res) => {
   try {
-    const events = await Calendrier.find({ type: 'audience' })
+    const query = { type: 'audience' };
+
+    const scope = await buildCalendrierScopeForUser(req.user);
+    if (Object.keys(scope).length > 0) {
+      Object.assign(query, scope);
+    }
+
+    const events = await Calendrier.find(query)
       .populate('dossierId', 'numero titre typeAffaire')
       .populate('assignes', 'nom prenom')
       .sort({ dateDebut: 1 });

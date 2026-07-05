@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TacheService, Tache } from '../../core/services/tache.service';
 import { AuthService } from '../../core/services/auth.service';
+import { UserService, User } from '../../core/services/user.service';
 
 @Component({
   selector: 'app-mon-espace',
@@ -156,6 +157,13 @@ import { AuthService } from '../../core/services/auth.service';
                         <span class="material-icons text-white text-xs">check</span>
                       }
                     </button>
+                    @if (canManageTasks()) {
+                      <button (click)="openAssignModal(tache)"
+                              class="mt-1 p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-lawyer-primary transition-colors"
+                              title="Assigner">
+                        <span class="material-icons text-sm">person_add</span>
+                      </button>
+                    }
 
                     <div class="flex-1 min-w-0">
                       <div class="flex items-start justify-between gap-2">
@@ -258,22 +266,87 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
         </div>
       </div>
+
+      <!-- Assign Task Modal -->
+      @if (showAssignModal()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+             style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px);"
+             (click)="closeAssignModal()">
+          <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide-up"
+               (click)="$event.stopPropagation()">
+            <div class="bg-gradient-to-br from-lawyer-primary via-lawyer-primary to-lawyer-dark px-6 py-4 rounded-t-2xl text-white">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold">Assigner la tâche</h3>
+                <button (click)="closeAssignModal()" class="text-white/80 hover:text-white">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+            </div>
+            <div class="p-6">
+              @if (selectedTache()) {
+                <div class="mb-4">
+                  <p class="text-sm text-slate-500 mb-1">Tâche</p>
+                  <p class="font-semibold text-lawyer-dark">{{ selectedTache()?.titre }}</p>
+                </div>
+              }
+              @if (assignError()) {
+                <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm mb-4 flex items-start gap-2">
+                  <span class="material-icons text-lg">error</span>
+                  <span>{{ assignError() }}</span>
+                </div>
+              }
+              <div>
+                <label class="form-label">Assigner à</label>
+                <select [(ngModel)]="selectedAssignee" class="select-field">
+                  <option value="">Sélectionnez un membre...</option>
+                  @for (user of availableUsers(); track user._id) {
+                    <option [value]="user._id">{{ user.prenom }} {{ user.nom }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3 rounded-b-2xl">
+              <button (click)="closeAssignModal()" class="btn-secondary">Annuler</button>
+              <button (click)="assignTache()"
+                      [disabled]="assigning() || !selectedAssignee()"
+                      class="btn-primary flex items-center gap-2">
+                @if (assigning()) {
+                  <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                }
+                Assigner
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
     .material-icons { font-size: 20px; }
+    .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.375rem; }
     .line-clamp-1 {
       display: -webkit-box;
       -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
   `]
 })
 export class MonEspaceComponent implements OnInit {
   taches = signal<Tache[]>([]);
   currentFilter = signal<'' | 'a_faire' | 'en_cours' | 'terminee' | 'annulee'>('');
   sortBy: 'echeance' | 'priorite' | 'recent' = 'echeance';
+  showAssignModal = signal(false);
+  selectedTache = signal<Tache | null>(null);
+  availableUsers = signal<User[]>([]);
+  selectedAssignee = signal<string>('');
+  assignError = signal<string>('');
+  assigning = signal(false);
 
   filteredTaches = computed(() => {
     const filter = this.currentFilter();
@@ -302,11 +375,23 @@ export class MonEspaceComponent implements OnInit {
 
   constructor(
     private tacheService: TacheService,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
     this.loadTaches();
+    const currentUser = this.authService.currentUser();
+    if (currentUser?.role === 'admin' || currentUser?.role === 'avocat') {
+      this.userService.getUsers().subscribe({
+        next: (users) => {
+          this.availableUsers.set(users.filter(u =>
+            u.role === 'collaborateur' || u.role === 'assistant' || u.role === 'secretaire'
+          ));
+        },
+        error: (err) => console.error('Error loading users:', err)
+      });
+    }
   }
 
   currentUser() { return this.authService.currentUser(); }
@@ -444,5 +529,45 @@ export class MonEspaceComponent implements OnInit {
   isOverdue(dateEcheance: Date | string, statut: string): boolean {
     if (statut === 'terminee' || statut === 'annulee') return false;
     return new Date(dateEcheance) < new Date();
+  }
+
+  canManageTasks(): boolean {
+    const role = this.authService.currentUser()?.role;
+    return role === 'admin' || role === 'avocat';
+  }
+
+  openAssignModal(tache: Tache) {
+    this.selectedTache.set(tache);
+    const assigneeId = typeof tache.assigneeA === 'object' ? tache.assigneeA?._id : tache.assigneeA;
+    this.selectedAssignee.set(assigneeId || '');
+    this.assignError.set('');
+    this.showAssignModal.set(true);
+  }
+
+  closeAssignModal() {
+    this.showAssignModal.set(false);
+    this.selectedTache.set(null);
+    this.assignError.set('');
+  }
+
+  assignTache() {
+    const tache = this.selectedTache();
+    if (!tache || !this.selectedAssignee()) return;
+
+    this.assigning.set(true);
+    this.assignError.set('');
+
+    const assigneeData: any = { assigneeA: this.selectedAssignee() };
+    this.tacheService.updateTache(tache._id, assigneeData).subscribe({
+      next: () => {
+        this.assigning.set(false);
+        this.closeAssignModal();
+        this.loadTaches();
+      },
+      error: (err) => {
+        this.assigning.set(false);
+        this.assignError.set(err.error?.message || 'Erreur lors de l\'assignation');
+      }
+    });
   }
 }

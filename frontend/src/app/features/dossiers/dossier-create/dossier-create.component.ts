@@ -5,6 +5,8 @@ import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { DossierService } from '../../../core/services/dossier.service';
 import { ClientService, Client } from '../../../core/services/client.service';
 import { IaService, AIPrediction, FeedbackData } from '../../../core/services/ia.service';
+import { UserService, User } from '../../../core/services/user.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { TypeAffaire } from '../../../core/models/dossier.model';
 import { ClientCreateComponent } from '../../clients/client-create/client-create.component';
 import { EventEmitter, Output } from '@angular/core';
@@ -27,9 +29,13 @@ export class DossierCreateComponent implements OnInit {
   private dossierService = inject(DossierService);
   private clientService = inject(ClientService);
   private iaService = inject(IaService);
+  private userService = inject(UserService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
+  availableAvocats = signal<User[]>([]);
+  selectedAvocatId = signal<string>('');
   searchClient = '';
   selectedClient = signal<Client | null>(null);
   searchResults = signal<Client[]>([]);
@@ -77,6 +83,7 @@ export class DossierCreateComponent implements OnInit {
     heureDebut: '',
     heureFin: '',
     juridiction: '',
+    assigneA: '',
     adversary: {
       nom: '',
       avocat: '',
@@ -114,6 +121,22 @@ export class DossierCreateComponent implements OnInit {
         error: (err) => console.error('Error loading client:', err)
       });
     }
+
+    this.userService.getUsers().subscribe({
+      next: (users) => {
+        const currentUser = this.authService.currentUser();
+        if (currentUser?.role === 'admin') {
+          this.availableAvocats.set(users.filter(u => u.role === 'avocat'));
+        } else if (currentUser?.role === 'avocat') {
+          const userFromList = users.find(u => u._id === currentUser.id);
+          if (userFromList) {
+            this.availableAvocats.set([userFromList]);
+            this.selectedAvocatId.set(userFromList._id);
+          }
+        }
+      },
+      error: (err) => console.error('Error loading avocats:', err)
+    });
   }
 
   onClientSearch() {
@@ -176,6 +199,7 @@ export class DossierCreateComponent implements OnInit {
       juridiction: this.dossier.juridiction,
       adversary: this.dossier.adversary,
       clientId: this.selectedClient()?._id,
+      assigneA: this.selectedAvocatId() || undefined,
       dateAudience: this.dossier.dateAudience ? this.formatDateWithTime(this.dossier.dateAudience, this.dossier.heureDebut, this.dossier.heureFin) : undefined
     };
 
@@ -304,6 +328,7 @@ export class DossierCreateComponent implements OnInit {
         juridiction: this.dossier.juridiction,
         adversary: this.dossier.adversary,
         clientId: this.selectedClient()?._id,
+      assigneA: this.selectedAvocatId() || undefined,
         dateAudience: this.dossier.dateAudience ? this.formatDateWithTime(this.dossier.dateAudience, this.dossier.heureDebut, this.dossier.heureFin) : undefined,
         iaPrediction: {
           categorieSuggeree: prediction.categorie?.suggeree,
