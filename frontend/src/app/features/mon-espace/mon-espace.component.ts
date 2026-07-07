@@ -30,6 +30,12 @@ import { UserService, User } from '../../core/services/user.service';
               <span class="material-icons text-base">badge</span>
               {{ getRoleLabel(currentUser()?.role || '') }}
             </p>
+            @if (currentUser()?.ownerId) {
+              <p class="text-blue-200 text-xs mt-1 flex items-center gap-1">
+                <span class="material-icons text-xs">supervisor_account</span>
+                Supervisé par: {{ currentUser()?.ownerId?.prenom }} {{ currentUser()?.ownerId?.nom }}
+              </p>
+            }
           </div>
         </div>
       </div>

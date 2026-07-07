@@ -576,6 +576,23 @@
           </div>
         }
 
+        <!-- Fichier PDF -->
+        <div class="md:col-span-2 mt-4 pt-6 border-t border-slate-100">
+          <label class="block text-sm font-medium text-slate-700 mb-2">Pièce jointe (PDF)</label>
+          <div class="flex items-center gap-4">
+            <label class="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-lawyer-primary hover:bg-lawyer-primary/5 transition-all">
+              <span class="material-icons text-slate-400">cloud_upload</span>
+              <span class="text-sm text-slate-600">{{ selectedFile() ? selectedFile()!.name : 'Choisir un fichier PDF...' }}</span>
+              <input type="file" accept=".pdf,application/pdf" (change)="onFileSelected($event)" class="hidden">
+            </label>
+            @if (selectedFile()) {
+              <button type="button" (click)="selectedFile.set(null)" class="text-red-500 hover:text-red-700">
+                <span class="material-icons text-sm">close</span>
+              </button>
+            }
+          </div>
+        </div>
+
         <!-- Actions -->
         <div class="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-slate-100">
           <a routerLink="/dossiers" class="btn-secondary">Annuler</a>
@@ -585,19 +602,19 @@
               (click)="submitWithFeedback()"
               class="btn-primary flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
               [disabled]="!isFormValid() || loading()">
-              @if (loading()) {
+              @if (loading() || uploadingFile()) {
                 <span class="material-icons text-lg animate-spin">refresh</span>
-                Création en cours...
+                {{ uploadingFile() ? 'Téléversement du PDF...' : 'Création en cours...' }}
               } @else {
                 <span class="material-icons text-lg">save</span>
                 Créer le dossier avec suggestions
               }
             </button>
           } @else {
-            <button type="submit" class="btn-primary flex items-center gap-2" [disabled]="!isFormValid() || loading()">
-              @if (loading()) {
+            <button type="submit" class="btn-primary flex items-center gap-2" [disabled]="!isFormValid() || loading() || uploadingFile()">
+              @if (loading() || uploadingFile()) {
                 <span class="material-icons text-lg animate-spin">refresh</span>
-                Création en cours...
+                {{ uploadingFile() ? 'Téléversement du PDF...' : 'Création en cours...' }}
               } @else {
                 <span class="material-icons text-lg">save</span>
                 Créer le dossier

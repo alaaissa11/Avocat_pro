@@ -107,6 +107,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <tr>
                 <th class="table-header">Membre</th>
                 <th class="table-header">Email</th>
+                <th class="table-header">Responsable</th>
                 <th class="table-header">Rôle</th>
                 <th class="table-header">Téléphone</th>
                 <th class="table-header">Statut</th>
@@ -129,6 +130,15 @@ import { AuthService } from '../../../core/services/auth.service';
                     </div>
                   </td>
                   <td class="table-cell text-sm text-slate-600">{{ user.email }}</td>
+                  <td class="table-cell text-sm">
+                    @if (user.ownerId) {
+                      <span class="badge" [ngClass]="getRoleBadgeClass(user.ownerId.role)">
+                        {{ user.ownerId.prenom }} {{ user.ownerId.nom }}
+                      </span>
+                    } @else {
+                      <span class="text-slate-400">—</span>
+                    }
+                  </td>
                   <td class="table-cell">
                     <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
                       {{ getRoleLabel(user.role) }}
@@ -174,7 +184,7 @@ import { AuthService } from '../../../core/services/auth.service';
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="6" class="table-cell text-center py-8 text-slate-500">
+                  <td colspan="7" class="table-cell text-center py-8 text-slate-500">
                     <span class="material-icons text-4xl block mb-2 text-slate-300">person_off</span>
                     Aucun membre trouvé
                   </td>

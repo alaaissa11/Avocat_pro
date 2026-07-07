@@ -70,49 +70,202 @@
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
   }
 
-  /* Override Angular Material Select Styles */
+  /* ============================================
+     GLASSMORPHISM SELECT / DROPDOWN STYLES
+     Premium Film-Like Appearance
+     ============================================ */
+  
+  /* Base Select Field - Glass Effect */
   select.select-field {
-    border-width: 2px !important;
-    border-radius: 12px !important;
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
-    padding-right: 48px !important;
+    border: 2px solid transparent !important;
+    border-radius: 16px !important;
+    padding: 14px 50px 14px 18px !important;
     font-size: 14px !important;
     font-weight: 500 !important;
-    color: #334155 !important;
-    background-color: #ffffff !important;
-    border-color: #e2e8f0 !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 12px center !important;
-    background-size: 20px !important;
+    color: #1e293b !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    border-color: rgba(226, 232, 240, 0.8) !important;
+    /* Animated gradient chevron */
+    background-image: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"),
+      linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9)) !important;
+    background-repeat: no-repeat, repeat !important;
+    background-position: right 18px center, center !important;
+    background-size: 22px, cover !important;
     appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
-    transition: all 0.2s ease !important;
-    box-shadow: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 
+      0 4px 16px rgba(0, 0, 0, 0.06),
+      0 1px 4px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 
+  /* Hover State - Enhanced Glow */
   select.select-field:hover {
-    border-color: #cbd5e1 !important;
-    background-color: #f8fafc !important;
+    border-color: rgba(99, 102, 241, 0.5) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%) !important;
+    box-shadow: 
+      0 8px 24px rgba(99, 102, 241, 0.18),
+      0 3px 8px rgba(99, 102, 241, 0.12),
+      0 0 0 1px rgba(99, 102, 241, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    transform: translateY(-2px);
   }
 
+  /* Focus State - Dramatic Glow */
   select.select-field:focus {
     outline: none !important;
-    border-color: #4f46e5 !important;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+    border-color: rgba(99, 102, 241, 0.8) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #eef2ff 100%) !important;
+    box-shadow: 
+      0 0 0 4px rgba(99, 102, 241, 0.15),
+      0 12px 32px rgba(99, 102, 241, 0.2),
+      0 4px 8px rgba(99, 102, 241, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+    transform: translateY(0);
   }
 
+  /* Disabled State */
+  select.select-field:disabled {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+    border-color: rgba(203, 213, 225, 0.6) !important;
+    color: #94a3b8 !important;
+    cursor: not-allowed !important;
+    opacity: 0.8;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  /* ============================================
+     DROPDOWN OPTIONS - Film/Pellicule Style
+     ============================================ */
+  
   select.select-field option {
-    padding: 12px !important;
+    padding: 16px 20px !important;
     font-size: 14px !important;
-    background-color: white !important;
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95)) !important;
     color: #334155 !important;
+    border: none !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: all 0.2s ease !important;
+    position: relative;
   }
 
+  /* Option Hover - Elegant Slide Effect */
   select.select-field option:hover {
-    background-color: #f3f4f6 !important;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    padding-left: 28px !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+
+  /* Option Hover - Decorative line */
+  select.select-field option:hover::before {
+    content: '▶';
+    position: absolute;
+    left: 8px;
+    font-size: 8px;
+    opacity: 0;
+    animation: slideIn 0.2s ease forwards;
+  }
+
+  /* Option Selected/Checked */
+  select.select-field option:checked {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 
+      0 2px 8px rgba(79, 70, 229, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-left: 4px solid #818cf8;
+  }
+
+  /* First Option (placeholder) */
+  select.select-field option:first-child {
+    color: #94a3b8 !important;
+    font-style: italic;
+    font-weight: 400;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  }
+
+  /* ============================================
+     CUSTOM SCROLLBAR - Film Quality
+     ============================================ */
+  
+  select.select-field option::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  select.select-field option::-webkit-scrollbar-track {
+    background: linear-gradient(to bottom, #f1f5f9, #e2e8f0);
+    border-radius: 6px;
+    margin: 4px;
+  }
+
+  select.select-field option::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a5b4fc 0%, #6366f1 100%);
+    border-radius: 6px;
+    border: 3px solid #f1f5f9;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  select.select-field option::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #818cf8 0%, #4f46e5 100%);
+  }
+
+  /* Thumb grip lines */
+  select.select-field option::-webkit-scrollbar-thumb::before {
+    content: '|||';
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 8px;
+    letter-spacing: 2px;
+  }
+
+  /* ============================================
+     ANIMATIONS
+     ============================================ */
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes gradientShift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* Animated border on focus */
+  select.select-field:focus {
+    animation: gradientShift 3s ease infinite;
+    background-size: 200% 200%;
+  }
+
+  /* Ripple effect on click (optional) */
+  select.select-field:active {
+    transform: scale(0.98);
+    box-shadow: 
+      0 2px 8px rgba(99, 102, 241, 0.15),
+      inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
   }
 
   .sidebar-link {

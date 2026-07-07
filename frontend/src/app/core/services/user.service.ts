@@ -15,6 +15,13 @@ export interface User {
   isActive: boolean;
   lastLogin?: Date;
   createdAt?: Date;
+  ownerId?: {
+    _id: string;
+    nom: string;
+    prenom: string;
+    email: string;
+    role: string;
+  };
 }
 
 export interface Collaborateur {

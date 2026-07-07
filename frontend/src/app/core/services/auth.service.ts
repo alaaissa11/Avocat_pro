@@ -10,6 +10,13 @@ export interface User {
   prenom: string;
   role: string;
   permissions?: string[];
+  ownerId?: {
+    _id: string;
+    nom: string;
+    prenom: string;
+    email: string;
+    role: string;
+  };
 }
 
 export interface LoginResponse {

@@ -283,6 +283,53 @@ import { Dossier, DossierStats } from '../../../core/models/dossier.model';
                 </div>
               </div>
             }
+
+          <!-- Documents -->
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="material-icons text-lawyer-primary">attach_file</span>
+                <h3 class="text-lg font-semibold text-lawyer-dark">Documents</h3>
+              </div>
+              <label class="flex items-center gap-1 px-3 py-1.5 text-xs bg-lawyer-primary text-white rounded-lg hover:bg-lawyer-dark cursor-pointer transition-all">
+                <span class="material-icons text-sm">cloud_upload</span>
+                Ajouter un fichier
+                <input type="file" accept=".pdf,application/pdf" (change)="onUploadDocument($event)" class="hidden">
+              </label>
+            </div>
+            @if (dossierDocuments().length > 0) {
+              <div class="space-y-2">
+                @for (doc of dossierDocuments(); track doc._id) {
+                  <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-lawyer-primary/30 transition-all">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <span class="material-icons text-slate-400">picture_as_pdf</span>
+                      <div class="min-w-0">
+                        <p class="font-medium text-lawyer-dark truncate">{{ doc.nom }}</p>
+                        <p class="text-xs text-slate-500">
+                          {{ doc.taille ? formatFileSize(doc.taille) : '-' }}
+                          <span class="ml-2" *ngIf="doc.createdAt">{{ doc.createdAt | date:'dd/MM/yyyy' }}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                      <button (click)="viewDocument(doc)" class="p-2 hover:bg-slate-200 rounded transition-all" title="Voir">
+                        <span class="material-icons text-slate-600 text-sm">visibility</span>
+                      </button>
+                      <button (click)="downloadDocument(doc)" class="p-2 hover:bg-slate-200 rounded transition-all" title="Télécharger">
+                        <span class="material-icons text-slate-600 text-sm">download</span>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+            @if (dossierDocuments().length === 0) {
+              <div class="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                <span class="material-icons text-3xl text-slate-300 block mb-2">description</span>
+                <p class="text-sm text-slate-500">Aucun document associé à ce dossier</p>
+              </div>
+            }
+          </div>
           </div>
 
           <!-- Footer -->
@@ -812,6 +859,20 @@ export class DossiersListComponent implements OnInit {
     if (dossier) {
       this.loadDossierDocuments(dossier._id);
     }
+  }
+
+  onUploadDocument(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const dossier = this.selectedDossier();
+    if (!dossier || !input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.documentService.uploadDocument(file, { dossierId: dossier._id }).subscribe({
+      next: () => {
+        this.refreshDocuments();
+      },
+      error: (err) => console.error('Error uploading document:', err)
+    });
+    input.value = '';
   }
 
   getDebugInfo(): string {

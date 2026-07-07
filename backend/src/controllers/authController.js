@@ -46,7 +46,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate('ownerId', 'nom prenom email role');
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -67,7 +67,15 @@ exports.login = async (req, res) => {
 
     res.json({
       message: 'Login successful',
-      user: { id: user._id, email: user.email, nom: user.nom, prenom: user.prenom, role: user.role, permissions: user.permissions },
+      user: { 
+        id: user._id, 
+        email: user.email, 
+        nom: user.nom, 
+        prenom: user.prenom, 
+        role: user.role, 
+        permissions: user.permissions,
+        ownerId: user.ownerId
+      },
       token
     });
   } catch (error) {
@@ -77,7 +85,9 @@ exports.login = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
+    const user = await User.findById(req.user._id)
+      .select('-password')
+      .populate('ownerId', 'nom prenom email role');
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching profile', error: error.message });

@@ -4,7 +4,7 @@ const Operation = require('../models/Operation');
 
 const defaultPermissions = {
   admin: ['read', 'write', 'delete', 'manage_users', 'manage_dossiers', 'manage_clients', 'view_stats'],
-  avocat: ['read', 'write', 'delete', 'manage_dossiers', 'manage_clients', 'view_stats'],
+  avocat: ['read', 'write', 'delete', 'manage_users', 'manage_dossiers', 'manage_clients', 'view_stats'],
   collaborateur: ['read', 'write', 'manage_dossiers', 'manage_clients'],
   assistant: ['read', 'write', 'manage_dossiers', 'manage_clients'],
   secretaire: ['read', 'manage_clients']
@@ -104,18 +104,16 @@ exports.createUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    // - admin : voit tous les users
+    // - admin : voit tous les users avec info owner
     // - avocat : voit les users qu'il a créés (ownerId = lui), plus lui-même
-    // - collaborateur/assistant/secretaire : ne devrait pas appeler cette route (filtré en amont),
-    //   mais on retourne au minimum les users accessibles (lui-même + son owner admin/avocat)
     const callerRole = req.user.role;
     let users;
     if (callerRole === 'admin') {
-      users = await User.find().select('-password').sort({ createdAt: -1 });
+      users = await User.find()
+        .select('-password')
+        .populate('ownerId', 'nom prenom email role')
+        .sort({ createdAt: -1 });
     } else {
-      // Liste des users dans le périmètre : ownerId = moi, OU moi-même, OU l'admin
-      // (pour qu'un avocat puisse afficher l'admin dans la liste d'affectation d'un dossier,
-      //  et qu'un collaborateur voie au moins son avocat/owner)
       const admin = await User.findOne({ email: 'avocat@avocat-pro.tn' }).select('_id').lean();
       const idsInScope = [req.user._id];
       if (admin) idsInScope.push(admin._id);
@@ -126,6 +124,7 @@ exports.getUsers = async (req, res) => {
         ]
       })
         .select('-password')
+        .populate('ownerId', 'nom prenom email role')
         .sort({ createdAt: -1 });
     }
     res.json(users);

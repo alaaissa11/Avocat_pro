@@ -22,7 +22,7 @@ const { auth, authorize, checkPermission } = require('../middleware/auth');
  *       200:
  *         description: List of users
  */
-router.get('/', auth, checkPermission('manage_users'), userController.getUsers);
+router.get('/', auth, authorize('admin', 'avocat'), userController.getUsers);
 
 /**
  * @swagger
@@ -82,7 +82,7 @@ router.get('/:id', auth, checkPermission('read'), userController.getUserById);
  *       200:
  *         description: User updated
  */
-router.put('/:id', auth, authorize('admin'), userController.updateUser);
+router.put('/:id', auth, authorize('admin', 'avocat'), userController.updateUser);
 
 /**
  * @swagger
@@ -96,7 +96,7 @@ router.put('/:id', auth, authorize('admin'), userController.updateUser);
  *       200:
  *         description: User deleted
  */
-router.delete('/:id', auth, authorize('admin'), userController.deleteUser);
+router.delete('/:id', auth, authorize('admin', 'avocat'), userController.deleteUser);
 
 /**
  * @swagger

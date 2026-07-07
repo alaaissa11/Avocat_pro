@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { DossierService } from '../../../core/services/dossier.service';
+import { DocumentService } from '../../../core/services/document.service';
 import { ClientService, Client } from '../../../core/services/client.service';
 import { IaService, AIPrediction, FeedbackData } from '../../../core/services/ia.service';
 import { UserService, User } from '../../../core/services/user.service';
@@ -27,6 +28,7 @@ interface ClientSearchResult {
 })
 export class DossierCreateComponent implements OnInit {
   private dossierService = inject(DossierService);
+  private documentService = inject(DocumentService);
   private clientService = inject(ClientService);
   private iaService = inject(IaService);
   private userService = inject(UserService);
@@ -41,6 +43,8 @@ export class DossierCreateComponent implements OnInit {
   searchResults = signal<Client[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
+  selectedFile = signal<File | null>(null);
+  uploadingFile = signal(false);
 
   showCreateClientModal = signal(false);
   @Output() clientCreated = new EventEmitter<Client>();
@@ -174,6 +178,13 @@ export class DossierCreateComponent implements OnInit {
     this.showCreateClientModal.set(false);
   }
 
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile.set(input.files[0]);
+    }
+  }
+
   isFormValid(): boolean {
     const validTypes = ['civil', 'penal', 'commercial', 'travail', 'famille', 'administratif', 'immobilier', 'bancaire', 'autre'];
     return !!(
@@ -205,8 +216,25 @@ export class DossierCreateComponent implements OnInit {
 
     this.dossierService.createDossier(dossierData).subscribe({
       next: (created) => {
-        this.loading.set(false);
-        this.router.navigate(['/dossiers', created._id]);
+        const file = this.selectedFile();
+        if (file) {
+          this.uploadingFile.set(true);
+          this.documentService.uploadDocument(file, { dossierId: created._id }).subscribe({
+            next: () => {
+              this.uploadingFile.set(false);
+              this.loading.set(false);
+              this.router.navigate(['/dossiers', created._id]);
+            },
+            error: () => {
+              this.uploadingFile.set(false);
+              this.loading.set(false);
+              this.router.navigate(['/dossiers', created._id]);
+            }
+          });
+        } else {
+          this.loading.set(false);
+          this.router.navigate(['/dossiers', created._id]);
+        }
       },
       error: (err) => {
         this.loading.set(false);
@@ -367,8 +395,25 @@ export class DossierCreateComponent implements OnInit {
             };
             this.iaService.submitFeedback(this.predictionId(), created._id, feedback).subscribe();
           }
-          this.loading.set(false);
-          this.router.navigate(['/dossiers', created._id]);
+          const file = this.selectedFile();
+          if (file) {
+            this.uploadingFile.set(true);
+            this.documentService.uploadDocument(file, { dossierId: created._id }).subscribe({
+              next: () => {
+                this.uploadingFile.set(false);
+                this.loading.set(false);
+                this.router.navigate(['/dossiers', created._id]);
+              },
+              error: () => {
+                this.uploadingFile.set(false);
+                this.loading.set(false);
+                this.router.navigate(['/dossiers', created._id]);
+              }
+            });
+          } else {
+            this.loading.set(false);
+            this.router.navigate(['/dossiers', created._id]);
+          }
         },
         error: (err) => {
           this.loading.set(false);
