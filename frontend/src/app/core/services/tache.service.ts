@@ -25,6 +25,7 @@ export interface Tache {
     jourMois?: number;
     finPeriodicite?: Date;
   };
+  feedback?: string;
   commentaire?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -92,5 +93,9 @@ export class TacheService {
 
   terminateTache(id: string, chargeConsommee?: number): Observable<Tache> {
     return this.http.post<Tache>(`${this.apiUrl}/${id}/terminer`, { chargeConsommee }, { headers: this.getHeaders() });
+  }
+
+  updateTacheStatus(id: string, data: { statut?: string; feedback?: string }): Observable<Tache> {
+    return this.http.put<Tache>(`${this.apiUrl}/${id}/status`, data, { headers: this.getHeaders() });
   }
 }

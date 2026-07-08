@@ -169,6 +169,27 @@ exports.terminerTache = async (req, res) => {
   }
 };
 
+exports.updateTacheStatus = async (req, res) => {
+  try {
+    const tache = await Tache.findById(req.params.id);
+    if (!tache) {
+      return res.status(404).json({ message: 'Tâche non trouvée' });
+    }
+    if (tache.assigneeA?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Seul l\'assigné peut modifier le statut de cette tâche.' });
+    }
+    const { statut, feedback } = req.body;
+    if (statut) tache.statut = statut;
+    if (feedback !== undefined) tache.feedback = feedback;
+    if (statut === 'terminee') tache.dateFin = new Date();
+    if (statut === 'en_cours') tache.dateDebut = new Date();
+    await tache.save();
+    res.json(tache);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating tache status', error: error.message });
+  }
+};
+
 exports.getMyTaches = async (req, res) => {
   try {
     const { statut } = req.query;

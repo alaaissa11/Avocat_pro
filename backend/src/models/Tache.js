@@ -30,6 +30,7 @@ const tacheSchema = new mongoose.Schema({
     notifie: { type: Boolean, default: false },
     canaux: [{ type: String, enum: ['email', 'sms', 'notification'] }]
   }],
+  feedback: { type: String },
   commentaire: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

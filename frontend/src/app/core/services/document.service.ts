@@ -38,6 +38,7 @@ export class DocumentService {
     search?: string; 
     type?: string;
     dossierId?: string;
+    tacheId?: string;
     clientId?: string;
   }): Observable<{ documents: Document[]; pagination: any }> {
     let httpParams = new HttpParams();
@@ -47,6 +48,7 @@ export class DocumentService {
       if (params.search) httpParams = httpParams.set('search', params.search);
       if (params.type) httpParams = httpParams.set('type', params.type);
       if (params.dossierId) httpParams = httpParams.set('dossierId', params.dossierId);
+      if (params.tacheId) httpParams = httpParams.set('tacheId', params.tacheId);
       if (params.clientId) httpParams = httpParams.set('clientId', params.clientId);
     }
     return this.http.get<{ documents: Document[]; pagination: any }>(this.apiUrl, { 
@@ -55,10 +57,11 @@ export class DocumentService {
     });
   }
 
-  uploadDocument(file: File, data: { dossierId?: string; clientId?: string; description?: string; type?: string }): Observable<Document> {
+  uploadDocument(file: File, data: { dossierId?: string; tacheId?: string; clientId?: string; description?: string; type?: string }): Observable<Document> {
     const formData = new FormData();
     formData.append('file', file);
     if (data.dossierId) formData.append('dossierId', data.dossierId);
+    if (data.tacheId) formData.append('tacheId', data.tacheId);
     if (data.clientId) formData.append('clientId', data.clientId);
     if (data.description) formData.append('description', data.description);
     if (data.type) formData.append('type', data.type);

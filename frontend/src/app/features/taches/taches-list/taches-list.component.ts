@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TacheService, Tache } from '../../../core/services/tache.service';
+import { DocumentService, Document } from '../../../core/services/document.service';
 import { UserService, User } from '../../../core/services/user.service';
 import { DossierService } from '../../../core/services/dossier.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -175,8 +176,11 @@ import { AuthService } from '../../../core/services/auth.service';
                       {{ getStatutLabel(tache.statut) }}
                     </span>
                   </td>
-                  <td class="table-cell text-right">
+                   <td class="table-cell text-right">
                     <div class="flex items-center justify-end gap-1">
+                      <button (click)="openTaskDetail(tache)" class="p-2 hover:bg-lawyer-primary/10 rounded" title="Voir détails">
+                        <span class="material-icons text-lawyer-primary text-sm">visibility</span>
+                      </button>
                       @if (tache.statut !== 'terminee' && tache.statut !== 'annulee') {
                         <button (click)="markAsComplete(tache)" class="p-2 hover:bg-green-100 rounded" title="Marquer comme terminée">
                           <span class="material-icons text-green-600 text-sm">check</span>
@@ -206,6 +210,136 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       </div>
     </div>
+
+    <!-- Task Detail Modal -->
+    @if (showTaskDetail()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+           style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px);"
+           (click)="closeTaskDetail()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-slide-up"
+             (click)="$event.stopPropagation()">
+          <div class="bg-gradient-to-br from-lawyer-primary via-lawyer-primary to-lawyer-dark px-6 py-4 rounded-t-2xl text-white flex items-center justify-between">
+            <h3 class="text-lg font-semibold">{{ taskDetail()?.titre }}</h3>
+            <button (click)="closeTaskDetail()" class="text-white/80 hover:text-white">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 80px);">
+            <!-- Task Info -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <p class="text-xs text-slate-500 mb-1">Statut</p>
+                <span class="badge text-xs" [ngClass]="getStatutBadgeClass(taskDetail()?.statut || '')">
+                  {{ getStatutLabel(taskDetail()?.statut || '') }}
+                </span>
+              </div>
+              @if (taskDetail()?.assigneeA) {
+                <div>
+                  <p class="text-xs text-slate-500 mb-1">Assigné à</p>
+                  <p class="text-sm font-medium">{{ taskDetail()?.assigneeA?.prenom }} {{ taskDetail()?.assigneeA?.nom }}</p>
+                </div>
+              }
+              @if (taskDetail()?.dossierId) {
+                <div>
+                  <p class="text-xs text-slate-500 mb-1">Dossier</p>
+                  <p class="text-sm font-medium">{{ taskDetail()?.dossierId?.numero }} - {{ taskDetail()?.dossierId?.titre }}</p>
+                </div>
+              }
+              @if (taskDetail()?.dateEcheance) {
+                <div>
+                  <p class="text-xs text-slate-500 mb-1">Échéance</p>
+                  <p class="text-sm font-medium">{{ taskDetail()?.dateEcheance ? formatDate(taskDetail()!.dateEcheance!) : '' }}</p>
+                </div>
+              }
+              @if (taskDetail()?.description) {
+                <div class="col-span-2">
+                  <p class="text-xs text-slate-500 mb-1">Description</p>
+                  <p class="text-sm">{{ taskDetail()?.description }}</p>
+                </div>
+              }
+            </div>
+
+            <!-- Feedback from collaborateur -->
+            <div class="mb-6">
+              <h4 class="text-sm font-semibold text-lawyer-dark flex items-center gap-2 mb-3">
+                <span class="material-icons text-lawyer-primary text-base">feedback</span>
+                Feedback du collaborateur
+              </h4>
+              @if (taskDetail()?.feedback) {
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <p class="text-sm whitespace-pre-wrap">{{ taskDetail()?.feedback }}</p>
+                </div>
+              } @else {
+                <p class="text-sm text-slate-400 italic">Aucun feedback pour le moment</p>
+              }
+            </div>
+
+            <!-- Dossier Documents -->
+            @if (taskDetail()?.dossierId) {
+              <div class="mb-6">
+                <h4 class="text-sm font-semibold text-lawyer-dark flex items-center gap-2 mb-3">
+                  <span class="material-icons text-lawyer-primary text-base">folder</span>
+                  Documents du dossier
+                </h4>
+                @if (dossierDocuments().length > 0) {
+                  <div class="space-y-2">
+                    @for (doc of dossierDocuments(); track doc._id) {
+                      <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-lawyer-primary/30 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                          <span class="material-icons text-slate-400 text-lg">description</span>
+                          <div class="min-w-0">
+                            <p class="text-sm font-medium truncate">{{ doc.nom }}</p>
+                            <p class="text-xs text-slate-500">{{ doc.taille ? (doc.taille / 1024).toFixed(1) + ' KB' : '' }}</p>
+                          </div>
+                        </div>
+                        <button (click)="downloadDoc(doc._id, doc.nom)" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-lawyer-primary transition-colors" title="Télécharger">
+                          <span class="material-icons text-lg">download</span>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="text-sm text-slate-400 italic">Aucun document dans ce dossier</p>
+                }
+              </div>
+            }
+
+            <!-- Task Documents -->
+            <div class="mb-6">
+              <h4 class="text-sm font-semibold text-lawyer-dark flex items-center gap-2 mb-3">
+                <span class="material-icons text-lawyer-primary text-base">attach_file</span>
+                Documents de la tâche
+              </h4>
+              @if (taskDocuments().length > 0) {
+                <div class="space-y-2">
+                  @for (doc of taskDocuments(); track doc._id) {
+                    <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-lawyer-primary/30 transition-colors">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <span class="material-icons text-slate-400 text-lg">description</span>
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium truncate">{{ doc.nom }}</p>
+                          <p class="text-xs text-slate-500">{{ doc.taille ? (doc.taille / 1024).toFixed(1) + ' KB' : '' }}</p>
+                        </div>
+                      </div>
+                      <button (click)="downloadDoc(doc._id, doc.nom)" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-lawyer-primary transition-colors" title="Télécharger">
+                        <span class="material-icons text-lg">download</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="text-sm text-slate-400 italic">Aucun document joint à cette tâche</p>
+              }
+            </div>
+          </div>
+
+          <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end rounded-b-2xl">
+            <button (click)="closeTaskDetail()" class="btn-secondary">Fermer</button>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Create/Edit Modal -->
     @if (showModal()) {
@@ -663,8 +797,14 @@ export class TachesListComponent implements OnInit {
     chargeEstimee: 0
   };
 
+  showTaskDetail = signal(false);
+  taskDetail = signal<Tache | null>(null);
+  dossierDocuments = signal<Document[]>([]);
+  taskDocuments = signal<Document[]>([]);
+
   constructor(
     private tacheService: TacheService,
+    private documentService: DocumentService,
     private userService: UserService,
     private dossierService: DossierService,
     private authService: AuthService
@@ -861,6 +1001,53 @@ export class TachesListComponent implements OnInit {
   isOverdue(dateEcheance: Date | string, statut: string): boolean {
     if (statut === 'terminee' || statut === 'annulee') return false;
     return new Date(dateEcheance) < new Date();
+  }
+
+  openTaskDetail(tache: Tache) {
+    this.taskDetail.set(tache);
+    this.showTaskDetail.set(true);
+    this.loadDossierDocuments(tache);
+    this.loadTaskDocuments(tache);
+  }
+
+  closeTaskDetail() {
+    this.showTaskDetail.set(false);
+    this.taskDetail.set(null);
+    this.dossierDocuments.set([]);
+    this.taskDocuments.set([]);
+  }
+
+  loadDossierDocuments(tache: Tache) {
+    const dossierId = typeof tache.dossierId === 'object' ? tache.dossierId?._id : tache.dossierId;
+    if (!dossierId) {
+      this.dossierDocuments.set([]);
+      return;
+    }
+    this.documentService.getDocuments({ dossierId, limit: 50 }).subscribe({
+      next: (res) => this.dossierDocuments.set(res.documents),
+      error: () => this.dossierDocuments.set([])
+    });
+  }
+
+  loadTaskDocuments(tache: Tache) {
+    this.documentService.getDocuments({ tacheId: tache._id, limit: 50 }).subscribe({
+      next: (res) => this.taskDocuments.set(res.documents),
+      error: () => this.taskDocuments.set([])
+    });
+  }
+
+  downloadDoc(id: string, filename: string) {
+    this.documentService.downloadDocument(id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => console.error('Error downloading document:', err)
+    });
   }
 
   openCreateModal() {

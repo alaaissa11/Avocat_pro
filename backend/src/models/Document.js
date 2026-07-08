@@ -12,6 +12,7 @@ const documentSchema = new mongoose.Schema({
   chemin: { type: String, required: true },
   taille: { type: Number },
   dossierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Dossier' },
+  tacheId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tache' },
   clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client' },
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   estPrive: { type: Boolean, default: false },

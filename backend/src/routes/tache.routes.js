@@ -129,4 +129,27 @@ router.delete('/:id', auth, checkPermission('delete'), tacheController.deleteTac
  */
 router.post('/:id/terminer', auth, tacheController.terminerTache);
 
+/**
+ * @swagger
+ * /api/taches/{id}/status:
+ *   put:
+ *     summary: Update task status and feedback (for assignee)
+ *     tags: [Taches]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               statut: { type: string, enum: [a_faire, en_cours, terminee] }
+ *               feedback: { type: string }
+ *     responses:
+ *       200:
+ *         description: Task status updated
+ */
+router.put('/:id/status', auth, tacheController.updateTacheStatus);
+
 module.exports = router;

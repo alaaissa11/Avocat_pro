@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Document = require('../models/Document');
+const Tache = require('../models/Tache');
 const Operation = require('../models/Operation');
 const Dossier = require('../models/Dossier');
 const fs = require('fs');
@@ -24,25 +25,38 @@ const buildDocumentScopeForUser = async (user) => {
   };
 
   const userDossiers = await Dossier.find(dossierScope).select('_id').lean();
-  
   const dossierIds = userDossiers.map(d => d._id);
 
-  if (dossierIds.length === 0) {
-    return { _id: null };
+  const userTaches = await Tache.find({ assigneeA: userId }).select('_id').lean();
+  const tacheIds = userTaches.map(t => t._id);
+
+  const conditions = [
+    { uploadedBy: userId }
+  ];
+
+  if (dossierIds.length > 0) {
+    conditions.push({ dossierId: { $in: dossierIds } });
   }
 
-  return {
-    $or: [
-      { dossierId: { $in: dossierIds } },
-      { uploadedBy: userId }
-    ]
-  };
+  if (tacheIds.length > 0) {
+    conditions.push({ tacheId: { $in: tacheIds } });
+  }
+
+  if (conditions.length === 1) {
+    return conditions[0];
+  }
+
+  return { $or: conditions };
 };
 
 const isDocumentInScope = async (doc, user) => {
   if (user.role === 'admin') return true;
   if (!doc) return false;
   if (doc.uploadedBy && doc.uploadedBy.toString() === user._id.toString()) return true;
+  if (doc.tacheId) {
+    const tache = await Tache.findById(doc.tacheId);
+    if (tache && tache.assigneeA && tache.assigneeA.toString() === user._id.toString()) return true;
+  }
   if (doc.dossierId) {
     const dossier = await Dossier.findById(doc.dossierId);
     if (dossier) {
@@ -72,9 +86,18 @@ exports.uploadDocument = async (req, res) => {
       return res.status(401).json({ message: 'Utilisateur non connecté' });
     }
 
-    const { dossierId, clientId, description, type, estPrive, tags } = req.body;
+    const { dossierId, tacheId, clientId, description, type, estPrive, tags } = req.body;
 
-    console.log('[Document] Données:', { dossierId, clientId, description, type });
+    console.log('[Document] Données:', { dossierId, tacheId, clientId, description, type });
+
+    let resolvedDossierId = dossierId && dossierId !== 'undefined' ? new mongoose.Types.ObjectId(dossierId) : undefined;
+
+    if (!resolvedDossierId && tacheId && tacheId !== 'undefined') {
+      const tache = await Tache.findById(tacheId).select('dossierId').lean();
+      if (tache && tache.dossierId) {
+        resolvedDossierId = tache.dossierId;
+      }
+    }
 
     let parsedTags = [];
     try {
@@ -90,7 +113,8 @@ exports.uploadDocument = async (req, res) => {
       mimeType: req.file.mimetype,
       chemin: req.file.path,
       taille: req.file.size,
-      dossierId: dossierId && dossierId !== 'undefined' ? new mongoose.Types.ObjectId(dossierId) : undefined,
+      dossierId: resolvedDossierId,
+      tacheId: tacheId && tacheId !== 'undefined' ? new mongoose.Types.ObjectId(tacheId) : undefined,
       clientId: clientId && clientId !== 'undefined' ? new mongoose.Types.ObjectId(clientId) : undefined,
       uploadedBy: req.user._id,
       estPrive: estPrive === 'true',
@@ -121,7 +145,7 @@ exports.uploadDocument = async (req, res) => {
 
 exports.getDocuments = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, type, dossierId, clientId } = req.query;
+    const { page = 1, limit = 10, search, type, dossierId, tacheId, clientId } = req.query;
     const query = {};
 
     if (search) {
@@ -134,6 +158,9 @@ exports.getDocuments = async (req, res) => {
     if (type) query.type = type;
     if (dossierId) {
       query.dossierId = new mongoose.Types.ObjectId(dossierId);
+    }
+    if (tacheId) {
+      query.tacheId = new mongoose.Types.ObjectId(tacheId);
     }
     if (clientId) query.clientId = clientId;
 
