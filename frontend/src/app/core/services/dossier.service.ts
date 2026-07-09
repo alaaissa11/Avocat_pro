@@ -64,4 +64,8 @@ export class DossierService {
   addCommentaire(id: string, commentaire: string): Observable<Dossier> {
     return this.http.post<Dossier>(`${this.apiUrl}/${id}/commentaire`, { commentaire }, { headers: this.getHeaders() });
   }
+
+  cloturerDossier(id: string): Observable<{ message: string; historiqueId: string }> {
+    return this.http.post<{ message: string; historiqueId: string }>(`${this.apiUrl}/${id}/cloturer`, {}, { headers: this.getHeaders() });
+  }
 }

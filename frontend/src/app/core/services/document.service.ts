@@ -40,6 +40,7 @@ export class DocumentService {
     dossierId?: string;
     tacheId?: string;
     clientId?: string;
+    sansTache?: boolean;
   }): Observable<{ documents: Document[]; pagination: any }> {
     let httpParams = new HttpParams();
     if (params) {
@@ -50,6 +51,7 @@ export class DocumentService {
       if (params.dossierId) httpParams = httpParams.set('dossierId', params.dossierId);
       if (params.tacheId) httpParams = httpParams.set('tacheId', params.tacheId);
       if (params.clientId) httpParams = httpParams.set('clientId', params.clientId);
+      if (params.sansTache) httpParams = httpParams.set('sansTache', 'true');
     }
     return this.http.get<{ documents: Document[]; pagination: any }>(this.apiUrl, { 
       headers: this.getHeaders(), 

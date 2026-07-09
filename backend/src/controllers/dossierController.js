@@ -1,4 +1,7 @@
 const Dossier = require('../models/Dossier');
+const Tache = require('../models/Tache');
+const Document = require('../models/Document');
+const HistoriqueDossier = require('../models/HistoriqueDossier');
 const Operation = require('../models/Operation');
 const iaService = require('../services/iaService');
 
@@ -206,6 +209,76 @@ exports.addCommentaire = async (req, res) => {
     res.json(dossier);
   } catch (error) {
     res.status(500).json({ message: 'Error adding commentaire', error: error.message });
+  }
+};
+
+exports.cloturerDossier = async (req, res) => {
+  try {
+    const dossier = await Dossier.findById(req.params.id);
+    if (!dossier) {
+      return res.status(404).json({ message: 'Dossier non trouvé' });
+    }
+    if (!(await isDossierInScope(dossier, req.user))) {
+      return res.status(403).json({ message: 'Accès refusé à ce dossier.' });
+    }
+    if (dossier.statut === 'cloture') {
+      return res.status(400).json({ message: 'Ce dossier est déjà clôturé.' });
+    }
+
+    const taches = await Tache.find({ dossierId: dossier._id }).lean();
+    const tachesWithDocs = await Promise.all(taches.map(async (tache) => {
+      const docs = await Document.find({ tacheId: tache._id })
+        .select('_id nom mimeType chemin taille')
+        .lean();
+      return {
+        _id: tache._id,
+        titre: tache.titre,
+        description: tache.description,
+        assigneeA: tache.assigneeA,
+        statut: tache.statut,
+        priorite: tache.priorite,
+        feedback: tache.feedback,
+        dateEcheance: tache.dateEcheance,
+        documents: docs
+      };
+    }));
+
+    const historique = new HistoriqueDossier({
+      dossier: {
+        _id: dossier._id,
+        numero: dossier.numero,
+        titre: dossier.titre,
+        clientId: dossier.clientId,
+        typeAffaire: dossier.typeAffaire,
+        priorite: dossier.priorite,
+        description: dossier.description,
+        assigneA: dossier.assigneA,
+        dateCreation: dossier.dateCreation,
+        dateCloture: new Date()
+      },
+      taches: tachesWithDocs,
+      cloturePar: req.user._id,
+      createdBy: req.user._id
+    });
+    await historique.save();
+
+    dossier.statut = 'cloture';
+    dossier.dateCloture = new Date();
+    dossier.addToHistory('dossier_cloture', req.user._id, 'Dossier clôturé et archivé dans l\'historique', null, null);
+    await dossier.save();
+
+    await new Operation({
+      type: 'dossier_cloture',
+      entiteType: 'dossier',
+      entiteId: dossier._id,
+      userId: req.user._id,
+      userEmail: req.user.email,
+      details: `Dossier "${dossier.numero}" clôturé avec ${taches.length} tâche(s)`
+    }).save();
+
+    res.json({ message: 'Dossier clôturé avec succès', historiqueId: historique._id });
+  } catch (error) {
+    res.status(500).json({ message: 'Error closing dossier', error: error.message });
   }
 };
 

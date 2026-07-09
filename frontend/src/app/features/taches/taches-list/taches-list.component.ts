@@ -1023,7 +1023,7 @@ export class TachesListComponent implements OnInit {
       this.dossierDocuments.set([]);
       return;
     }
-    this.documentService.getDocuments({ dossierId, limit: 50 }).subscribe({
+    this.documentService.getDocuments({ dossierId, sansTache: true, limit: 50 }).subscribe({
       next: (res) => this.dossierDocuments.set(res.documents),
       error: () => this.dossierDocuments.set([])
     });

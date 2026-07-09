@@ -179,4 +179,24 @@ router.delete('/:id', auth, checkPermission('delete'), dossierController.deleteD
  */
 router.post('/:id/commentaire', auth, dossierController.addCommentaire);
 
+/**
+ * @swagger
+ * /api/dossiers/{id}/cloturer:
+ *   post:
+ *     summary: Close a dossier and archive it to history
+ *     tags: [Dossiers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Dossier closed
+ */
+router.post('/:id/cloturer', auth, dossierController.cloturerDossier);
+
 module.exports = router;

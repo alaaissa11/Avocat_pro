@@ -145,7 +145,7 @@ exports.uploadDocument = async (req, res) => {
 
 exports.getDocuments = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, type, dossierId, tacheId, clientId } = req.query;
+    const { page = 1, limit = 10, search, type, dossierId, tacheId, clientId, sansTache } = req.query;
     const query = {};
 
     if (search) {
@@ -163,6 +163,9 @@ exports.getDocuments = async (req, res) => {
       query.tacheId = new mongoose.Types.ObjectId(tacheId);
     }
     if (clientId) query.clientId = clientId;
+    if (sansTache === 'true') {
+      query.tacheId = { $exists: false };
+    }
 
     const scope = await buildDocumentScopeForUser(req.user);
     

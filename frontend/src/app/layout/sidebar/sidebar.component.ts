@@ -80,6 +80,10 @@ import { AuthService } from '../../core/services/auth.service';
                 <span class="material-icons text-lg">description</span>
                 <span>Documents</span>
               </a>
+              <a routerLink="/historique" routerLinkActive="active" class="sidebar-link">
+                <span class="material-icons text-lg">history</span>
+                <span>Historique</span>
+              </a>
             </div>
           </div>
 
