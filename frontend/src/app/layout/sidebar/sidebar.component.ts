@@ -37,6 +37,10 @@ import { AuthService } from '../../core/services/auth.service';
                 <span class="material-icons text-lg">assignment</span>
                 <span>Mes tâches</span>
               </a>
+              <a routerLink="/messagerie" routerLinkActive="active" class="sidebar-link">
+                <span class="material-icons text-lg">mail</span>
+                <span>Messagerie</span>
+              </a>
             </div>
           </div>
         } @else {
@@ -60,6 +64,10 @@ import { AuthService } from '../../core/services/auth.service';
               <a routerLink="/calendar" routerLinkActive="active" class="sidebar-link">
                 <span class="material-icons text-lg">calendar_today</span>
                 <span>Calendrier</span>
+              </a>
+              <a routerLink="/messagerie" routerLinkActive="active" class="sidebar-link">
+                <span class="material-icons text-lg">mail</span>
+                <span>Messagerie</span>
               </a>
             </div>
           </div>
