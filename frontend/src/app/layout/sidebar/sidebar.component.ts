@@ -104,6 +104,10 @@ import { AuthService } from '../../core/services/auth.service';
                   <span class="material-icons text-lg">groups</span>
                   <span>Équipe</span>
                 </a>
+                <a routerLink="/operations" routerLinkActive="active" class="sidebar-link">
+                  <span class="material-icons text-lg">history</span>
+                  <span>Journal d'activité</span>
+                </a>
               </div>
             </div>
           }

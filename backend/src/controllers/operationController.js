@@ -1,13 +1,28 @@
 const Operation = require('../models/Operation');
+const User = require('../models/User');
+
+const buildScopeUserIds = async (user) => {
+  if (user.role === 'admin') return null;
+  if (user.role === 'avocat') {
+    const team = await User.find({ ownerId: user._id }).select('_id').lean();
+    return [user._id, ...team.map(u => u._id)];
+  }
+  return [user._id];
+};
 
 exports.getOperations = async (req, res) => {
   try {
     const { page = 1, limit = 20, type, entiteType, userId, dateDebut, dateFin } = req.query;
     const query = {};
 
+    const scopeIds = await buildScopeUserIds(req.user);
+    if (scopeIds) {
+      query.userId = { $in: scopeIds };
+    }
+
     if (type) query.type = type;
     if (entiteType) query.entiteType = entiteType;
-    if (userId) query.userId = userId;
+    if (userId) query.userId = { $in: scopeIds ? scopeIds.filter(id => id.toString() === userId) : [userId] };
 
     if (dateDebut || dateFin) {
       query.date = {};
@@ -35,7 +50,12 @@ exports.getOperations = async (req, res) => {
 exports.getOperationsByEntity = async (req, res) => {
   try {
     const { entiteType, entiteId } = req.params;
-    const operations = await Operation.find({ entiteType, entiteId })
+    const query = { entiteType, entiteId };
+
+    const scopeIds = await buildScopeUserIds(req.user);
+    if (scopeIds) query.userId = { $in: scopeIds };
+
+    const operations = await Operation.find(query)
       .populate('userId', 'nom prenom')
       .sort({ date: -1 });
     res.json(operations);
@@ -49,12 +69,15 @@ exports.getTraceabilite = async (req, res) => {
     const { startDate, endDate, userId } = req.query;
     const query = {};
 
+    const scopeIds = await buildScopeUserIds(req.user);
+    if (scopeIds) query.userId = { $in: scopeIds };
+
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);
       if (endDate) query.date.$lte = new Date(endDate);
     }
-    if (userId) query.userId = userId;
+    if (userId) query.userId = { $in: scopeIds ? scopeIds.filter(id => id.toString() === userId) : [userId] };
 
     const operations = await Operation.find(query)
       .populate('userId', 'nom prenom')
