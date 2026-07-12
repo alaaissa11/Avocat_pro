@@ -9,6 +9,7 @@ export interface User {
   nom: string;
   prenom: string;
   role: string;
+  statut?: string;
   permissions?: string[];
   ownerId?: {
     _id: string;

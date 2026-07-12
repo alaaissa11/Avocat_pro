@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -36,6 +36,55 @@ import { UserService, User } from '../../core/services/user.service';
                 <span class="material-icons text-xs">supervisor_account</span>
                 Supervisé par: {{ currentUser()?.ownerId?.prenom }} {{ currentUser()?.ownerId?.nom }}
               </p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- MON STATUT -->
+      <div class="card p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                 [class.bg-emerald-100]="currentStatut() === 'actif'"
+                 [class.bg-amber-100]="currentStatut() !== 'actif'">
+              <span class="material-icons"
+                    [class.text-emerald-600]="currentStatut() === 'actif'"
+                    [class.text-amber-600]="currentStatut() !== 'actif'">
+                {{ currentStatut() === 'actif' ? 'check_circle' : 'event_busy' }}
+              </span>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-slate-700">Mon statut</p>
+              <p class="text-xs text-slate-500">
+                @if (currentStatut() === 'actif') {
+                  Vous êtes disponible
+                } @else if (currentStatut() === 'conge') {
+                  Vous êtes en congé
+                } @else {
+                  Vous êtes indisponible
+                }
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-1.5">
+            @if (currentStatut() === 'actif') {
+              <button (click)="changerStatut('conge')"
+                      class="px-3 py-1.5 text-xs rounded-lg font-medium transition-all hover:bg-amber-100 hover:text-amber-700 text-slate-500 border border-slate-200">
+                <span class="flex items-center gap-1">
+                  <span class="material-icons text-sm">beach_access</span>
+                  Me mettre en congé
+                </span>
+              </button>
+              <button (click)="changerStatut('indisponible')"
+                      class="px-3 py-1.5 text-xs rounded-lg font-medium transition-all hover:bg-red-100 hover:text-red-700 text-slate-500 border border-slate-200">
+                <span class="flex items-center gap-1">
+                  <span class="material-icons text-sm">do_not_disturb</span>
+                  Indisponible
+                </span>
+              </button>
+            } @else {
+              <span class="text-xs text-slate-400 italic">Contactez votre superviseur pour changer de statut</span>
             }
           </div>
         </div>
@@ -545,6 +594,9 @@ export class MonEspaceComponent implements OnInit {
   originalFeedback = signal<string>('');
   uploadingFile = signal(false);
   savingFeedback = signal(false);
+  savingStatut = signal(false);
+
+  currentStatut = computed(() => this.authService.currentUser()?.statut || 'actif');
 
   constructor(
     private tacheService: TacheService,
@@ -569,6 +621,21 @@ export class MonEspaceComponent implements OnInit {
   }
 
   currentUser() { return this.authService.currentUser(); }
+
+  changerStatut(statut: string) {
+    const user = this.authService.currentUser();
+    if (!user) return;
+    this.savingStatut.set(true);
+    this.userService.setStatut(user.id, statut).subscribe({
+      next: () => {
+        const updated = { ...user, statut };
+        this.authService.currentUser.set(updated);
+        localStorage.setItem('avocat_pro_user', JSON.stringify(updated));
+        this.savingStatut.set(false);
+      },
+      error: () => this.savingStatut.set(false)
+    });
+  }
 
   loadTaches() {
     this.tacheService.getMyTaches().subscribe({

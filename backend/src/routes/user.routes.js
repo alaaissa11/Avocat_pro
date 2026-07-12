@@ -54,7 +54,7 @@ router.get('/', auth, authorize('admin', 'avocat'), userController.getUsers);
  *       409:
  *         description: Email already in use
  */
-router.post('/', auth, authorize('admin', 'avocat'), userController.createUser);
+router.post('/', auth, authorize('admin'), userController.createUser);
 
 /**
  * @swagger
@@ -69,6 +69,20 @@ router.post('/', auth, authorize('admin', 'avocat'), userController.createUser);
  *         description: User details
  */
 router.get('/:id', auth, checkPermission('read'), userController.getUserById);
+
+/**
+ * @swagger
+ * /api/users/{id}/statut:
+ *   put:
+ *     summary: Update user statut (actif/conge/indisponible)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Statut mis à jour
+ */
+router.put('/:id/statut', auth, userController.setUserStatut);
 
 /**
  * @swagger
@@ -111,33 +125,10 @@ router.delete('/:id', auth, authorize('admin', 'avocat'), userController.deleteU
  *         description: List of collaborateurs
  */
 router.get('/collaborateurs/list', auth, checkPermission('read'), userController.getCollaborateurs);
-
-/**
- * @swagger
- * /api/users/collaborateurs/{id}/performance:
- *   get:
- *     summary: Get collaborateur performance
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Performance data
- */
+router.get('/collaborateurs/invitable', auth, authorize('avocat'), userController.getInvitableUsers);
 router.get('/collaborateurs/:id/performance', auth, checkPermission('read'), userController.getCollaborateurStats);
-
-/**
- * @swagger
- * /api/users/collaborateurs/{id}/performance:
- *   put:
- *     summary: Update collaborateur performance
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Performance updated
- */
 router.put('/collaborateurs/:id/performance', auth, authorize('admin', 'avocat'), userController.updateCollaborateurPerformance);
+router.put('/:id/remove-owner', auth, authorize('admin', 'avocat'), userController.removeOwner);
+router.put('/:id/assign-owner', auth, authorize('admin'), userController.assignOwner);
 
 module.exports = router;

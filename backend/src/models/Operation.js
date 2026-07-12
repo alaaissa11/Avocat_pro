@@ -37,4 +37,13 @@ operationSchema.index({ userId: 1, date: -1 });
 operationSchema.index({ date: -1 });
 operationSchema.index({ type: 1, date: -1 });
 
+operationSchema.post('save', async function(doc) {
+  try {
+    const { notifyOperation } = require('../services/notificationService');
+    await notifyOperation(doc);
+  } catch (err) {
+    console.error('[Operation] post-save notification error:', err.message);
+  }
+});
+
 module.exports = mongoose.model('Operation', operationSchema);

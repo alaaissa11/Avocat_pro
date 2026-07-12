@@ -34,7 +34,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user._id, email, nom, prenom, role: userRole, permissions: user.permissions },
+      user: { id: user._id, email, nom, prenom, role: userRole, statut: 'actif', permissions: user.permissions },
       token
     });
   } catch (error) {
@@ -56,7 +56,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    if (!user.isActive) {
+    if (!user.isActive && (!user.statut || user.statut === 'actif')) {
       return res.status(401).json({ message: 'Account is deactivated' });
     }
 
@@ -73,6 +73,7 @@ exports.login = async (req, res) => {
         nom: user.nom, 
         prenom: user.prenom, 
         role: user.role, 
+        statut: user.statut || 'actif',
         permissions: user.permissions,
         ownerId: user.ownerId
       },

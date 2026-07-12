@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
   telephone: { type: String },
   avatar: { type: String },
   isActive: { type: Boolean, default: true },
+  statut: { type: String, enum: ['actif', 'conge', 'indisponible'], default: 'actif' },
   lastLogin: { type: Date },
   // Hiérarchie : ownerId pointe vers le user qui a créé ce user.
   // - admin (avocat@avocat-pro.tn) : ownerId = null

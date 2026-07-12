@@ -13,6 +13,7 @@ export interface User {
   telephone?: string;
   avatar?: string;
   isActive: boolean;
+  statut?: string;
   lastLogin?: Date;
   createdAt?: Date;
   ownerId?: {
@@ -86,7 +87,23 @@ export class UserService {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
   }
 
+  setStatut(id: string, statut: string): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}/statut`, { statut }, { headers: this.getHeaders() });
+  }
+
   getCollaborateurs(): Observable<Collaborateur[]> {
     return this.http.get<Collaborateur[]>(`${this.apiUrl}/collaborateurs/list`, { headers: this.getHeaders() });
+  }
+
+  removeOwner(id: string): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}/remove-owner`, {}, { headers: this.getHeaders() });
+  }
+
+  assignOwner(id: string, ownerId: string): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}/assign-owner`, { ownerId }, { headers: this.getHeaders() });
+  }
+
+  getInvitableUsers(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/collaborateurs/invitable`, { headers: this.getHeaders() });
   }
 }

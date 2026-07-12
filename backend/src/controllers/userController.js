@@ -29,16 +29,11 @@ exports.createUser = async (req, res) => {
     // - admin : peut créer un avocat, ou un collaborateur/assistant
     // - avocat : peut créer un collaborateur ou assistant uniquement
     // - les autres rôles : ne peuvent pas créer d'utilisateurs (refus 403)
+    // Seul l'admin peut créer des comptes
     const callerRole = req.user.role;
     const userRole = role || 'collaborateur';
     if (callerRole !== 'admin') {
-      if (callerRole !== 'avocat') {
-        return res.status(403).json({ message: 'Seuls les administrateurs et avocats peuvent créer des membres.' });
-      }
-      // Un avocat ne peut pas créer un autre admin ni un autre avocat
-      if (userRole === 'admin' || userRole === 'avocat') {
-        return res.status(403).json({ message: 'Un avocat ne peut pas créer un administrateur ni un autre avocat.' });
-      }
+      return res.status(403).json({ message: 'Seuls les administrateurs peuvent créer des membres.' });
     }
     if (userRole === 'admin' && callerRole !== 'admin') {
       return res.status(403).json({ message: 'Seul un administrateur peut créer un autre administrateur.' });
@@ -61,7 +56,7 @@ exports.createUser = async (req, res) => {
       prenom,
       role: userRole,
       telephone,
-      ownerId: req.user._id,
+      ownerId: null,
       permissions: defaultPermissions[userRole] || ['read']
     });
     await user.save();
@@ -200,6 +195,61 @@ exports.updateUser = async (req, res) => {
   }
 };
 
+exports.setUserStatut = async (req, res) => {
+  try {
+    const { statut } = req.body;
+    if (!['actif', 'conge', 'indisponible'].includes(statut)) {
+      return res.status(400).json({ message: 'Statut invalide. Valeurs acceptées : actif, conge, indisponible' });
+    }
+
+    const targetId = req.params.id;
+    const isSelf = targetId === req.user._id.toString();
+
+    // Vérifier les droits
+    if (!isSelf) {
+      if (req.user.role !== 'admin') {
+        const target = await User.findById(targetId).select('ownerId');
+        if (!target) return res.status(404).json({ message: 'User not found' });
+        const isOwner = target.ownerId && target.ownerId.toString() === req.user._id.toString();
+        if (!isOwner) {
+          return res.status(403).json({ message: 'Vous ne pouvez modifier que le statut de votre équipe.' });
+        }
+      }
+    } else {
+      // Un utilisateur ne peut que se mettre en congé/indisponible,
+      // il ne peut pas se réactiver tout seul ni changer de statut une fois en congé
+      const current = await User.findById(targetId).select('statut');
+      if (current && current.statut && current.statut !== 'actif') {
+        return res.status(403).json({ message: 'Vous ne pouvez pas modifier votre statut seul. Contactez votre superviseur.' });
+      }
+      if (statut === 'actif') {
+        return res.status(403).json({ message: 'Vous ne pouvez pas vous réactiver seul. Contactez votre superviseur.' });
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(
+      targetId,
+      { statut, isActive: statut === 'actif' },
+      { new: true }
+    ).select('-password');
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    await new Operation({
+      type: 'utilisateur_modifie',
+      entiteType: 'user',
+      entiteId: user._id,
+      userId: req.user._id,
+      userEmail: req.user.email,
+      details: `Statut de ${user.email} changé à ${statut}`
+    }).save();
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating statut', error: error.message });
+  }
+};
+
 exports.deleteUser = async (req, res) => {
   try {
     if (req.params.id === req.user._id.toString()) {
@@ -217,6 +267,24 @@ exports.deleteUser = async (req, res) => {
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting user', error: error.message });
+  }
+};
+
+exports.getInvitableUsers = async (req, res) => {
+  try {
+    if (req.user.role !== 'avocat') {
+      return res.status(403).json({ message: 'Seuls les avocats peuvent voir les membres invitables.' });
+    }
+    const users = await User.find({
+      role: { $in: ['collaborateur', 'assistant', 'secretaire'] },
+      ownerId: null,
+      statut: { $in: ['actif', null] }
+    })
+      .select('-password')
+      .sort({ nom: 1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Error', error: error.message });
   }
 };
 
@@ -260,5 +328,64 @@ exports.updateCollaborateurPerformance = async (req, res) => {
     res.json(collaborateur);
   } catch (error) {
     res.status(500).json({ message: 'Error updating performance', error: error.message });
+  }
+};
+
+exports.removeOwner = async (req, res) => {
+  try {
+    const target = await User.findById(req.params.id).select('ownerId role nom prenom');
+    if (!target) return res.status(404).json({ message: 'Utilisateur introuvable' });
+    const isOwner = target.ownerId && target.ownerId.toString() === req.user._id.toString();
+    if (req.user.role !== 'admin' && !isOwner) {
+      return res.status(403).json({ message: 'Vous ne pouvez retirer que les membres de votre équipe.' });
+    }
+    if (['admin', 'avocat'].includes(target.role)) {
+      return res.status(400).json({ message: 'Impossible de retirer le superviseur d\'un admin ou avocat.' });
+    }
+    target.ownerId = null;
+    await target.save();
+    await new Operation({
+      type: 'utilisateur_modifie',
+      entiteType: 'user',
+      entiteId: target._id,
+      userId: req.user._id,
+      userEmail: req.user.email,
+      details: `${target.prenom} ${target.nom} retiré de l'équipe`
+    }).save();
+    const updated = await User.findById(target._id).select('-password').populate('ownerId', 'nom prenom email role');
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: 'Error removing owner', error: error.message });
+  }
+};
+
+exports.assignOwner = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Seul un administrateur peut assigner un superviseur.' });
+    }
+    const { ownerId } = req.body;
+    if (!ownerId) return res.status(400).json({ message: 'ownerId requis' });
+    const target = await User.findById(req.params.id);
+    if (!target) return res.status(404).json({ message: 'Utilisateur introuvable' });
+    const supervisor = await User.findById(ownerId);
+    if (!supervisor) return res.status(404).json({ message: 'Superviseur introuvable' });
+    if (supervisor.role !== 'avocat' && supervisor.role !== 'admin') {
+      return res.status(400).json({ message: 'Le superviseur doit être un avocat ou administrateur.' });
+    }
+    target.ownerId = ownerId;
+    await target.save();
+    await new Operation({
+      type: 'utilisateur_modifie',
+      entiteType: 'user',
+      entiteId: target._id,
+      userId: req.user._id,
+      userEmail: req.user.email,
+      details: `${target.prenom} ${target.nom} assigné à ${supervisor.prenom} ${supervisor.nom}`
+    }).save();
+    const updated = await User.findById(target._id).select('-password').populate('ownerId', 'nom prenom email role');
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: 'Error assigning owner', error: error.message });
   }
 };

@@ -3,8 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CalendrierService, CalendrierEvent } from '../../core/services/calendrier.service';
-import { DossierService } from '../../core/services/dossier.service';
-import { Dossier } from '../../core/models/dossier.model';
 
 interface CalendarDay {
   date: Date;
@@ -326,7 +324,6 @@ interface CalendarEventItem {
 })
 export class CalendarComponent implements OnInit {
   private calendrierService = inject(CalendrierService);
-  private dossierService = inject(DossierService);
 
   weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
   hours = Array.from({ length: 12 }, (_, i) => i + 8);
@@ -336,7 +333,6 @@ export class CalendarComponent implements OnInit {
   calendarDays = signal<CalendarDay[]>([]);
   
   events = signal<CalendrierEvent[]>([]);
-  dossierAudiences = signal<Dossier[]>([]);
   
   selectedEvent = signal<any>(null);
   showCreateModal = signal(false);
@@ -352,8 +348,6 @@ export class CalendarComponent implements OnInit {
 
   ngOnInit() {
     this.loadEvents();
-    this.loadDossierAudiences();
-    this.generateCalendarDays();
   }
 
   loadEvents() {
@@ -361,19 +355,11 @@ export class CalendarComponent implements OnInit {
     const end = this.getEndOfMonth();
     
     this.calendrierService.getEvents({ start: start.toISOString(), end: end.toISOString() }).subscribe({
-      next: (data) => this.events.set(data),
-      error: (err) => console.error('Error loading events:', err)
-    });
-  }
-
-  loadDossierAudiences() {
-    this.dossierService.getDossiers({ limit: 100 }).subscribe({
-      next: (response) => {
-        const audiences = response.dossiers.filter(d => d.dateAudience);
-        this.dossierAudiences.set(audiences);
+      next: (data) => {
+        this.events.set(data);
         this.generateCalendarDays();
       },
-      error: (err) => console.error('Error loading dossiers:', err)
+      error: (err) => console.error('Error loading events:', err)
     });
   }
 
@@ -425,24 +411,6 @@ export class CalendarComponent implements OnInit {
       }
     });
 
-    this.dossierAudiences().forEach(dossier => {
-      if (dossier.dateAudience) {
-        const audienceDate = new Date(dossier.dateAudience);
-        if (audienceDate.toDateString() === dateStr) {
-          eventItems.push({
-            id: `dossier-${dossier._id}`,
-            titre: dossier.titre,
-            type: 'audience',
-            heure: this.formatHour(dossier.dateAudience),
-            color: 'bg-lawyer-primary text-white',
-            dossierId: dossier._id,
-            dateDebut: dossier.dateAudience,
-            dateFin: dossier.dateAudience
-          });
-        }
-      }
-    });
-
     return eventItems.sort((a, b) => a.heure.localeCompare(b.heure));
   }
 
@@ -463,23 +431,6 @@ export class CalendarComponent implements OnInit {
           dossierId: event.dossierId?.numero,
           dateDebut: event.dateDebut,
           dateFin: event.dateFin
-        });
-      }
-    });
-
-    this.dossierAudiences().forEach(dossier => {
-      if (!dossier.dateAudience) return;
-      const audienceDate = new Date(dossier.dateAudience);
-      if (audienceDate.toDateString() === dateStr && audienceDate.getHours() === hour) {
-        eventItems.push({
-          id: `dossier-${dossier._id}`,
-          titre: dossier.titre,
-          type: 'audience',
-          heure: this.formatHour(dossier.dateAudience),
-          color: 'bg-lawyer-primary text-white',
-          dossierId: dossier._id,
-          dateDebut: dossier.dateAudience,
-          dateFin: dossier.dateAudience
         });
       }
     });

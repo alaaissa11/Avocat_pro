@@ -1,5 +1,6 @@
 const Message = require('../models/Message');
 const User = require('../models/User');
+const { notifyMessage } = require('../services/notificationService');
 
 const canMessageUser = async (sender, receiverId) => {
   if (sender.role === 'admin') return true;
@@ -33,6 +34,7 @@ exports.envoyerMessage = async (req, res) => {
     const populated = await Message.findById(message._id)
       .populate('sender', 'nom prenom role')
       .populate('receiver', 'nom prenom role');
+    notifyMessage(populated);
     res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: 'Erreur lors de l\'envoi', error: error.message });

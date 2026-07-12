@@ -40,7 +40,9 @@ exports.getEvents = async (req, res) => {
     const query = {};
 
     if (start && end) {
-      query.dateDebut = { $gte: new Date(start), $lte: new Date(end) };
+      const endDate = new Date(end);
+      endDate.setHours(23, 59, 59, 999);
+      query.dateDebut = { $gte: new Date(start), $lte: endDate };
     }
 
     if (userId) query.$or = [{ userId }, { assignes: userId }];
@@ -61,9 +63,42 @@ exports.getEvents = async (req, res) => {
       .populate('userId', 'nom prenom')
       .populate('assignes', 'nom prenom')
       .populate('dossierId', 'numero titre')
-      .sort({ dateDebut: 1 });
+      .sort({ dateDebut: 1 })
+      .lean();
 
-    res.json(events);
+    const dossierQuery = { dateAudience: { $ne: null, $exists: true } };
+    const dossierScope = await buildDossierScopeForUser(req.user);
+    if (Object.keys(dossierScope).length > 0) Object.assign(dossierQuery, dossierScope);
+    if (start && end) {
+      const endDate = new Date(end);
+      endDate.setHours(23, 59, 59, 999);
+      dossierQuery.dateAudience = { $gte: new Date(start), $lte: endDate };
+    }
+
+    const dossierAudiences = await Dossier.find(dossierQuery)
+      .select('numero titre typeAffaire dateAudience lieu statut createdBy')
+      .lean();
+
+    const dossiersAsEvents = dossierAudiences.map(d => ({
+      _id: `dossier-${d._id}`,
+      _source: 'dossier',
+      titre: `Audience - ${d.titre || d.numero || 'Sans titre'}`,
+      type: 'audience',
+      dateDebut: d.dateAudience,
+      dateFin: d.dateAudience,
+      lieu: d.lieu || '',
+      statut: d.statut,
+      dossierId: { _id: d._id, numero: d.numero, titre: d.titre },
+      createdBy: d.createdBy
+    }));
+
+    const merged = [...events, ...dossiersAsEvents].sort((a, b) => {
+      const da = new Date(a.dateDebut).getTime();
+      const db = new Date(b.dateDebut).getTime();
+      return da - db;
+    });
+
+    res.json(merged);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching events', error: error.message });
   }
@@ -156,21 +191,62 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
+const buildDossierScopeForUser = async (user) => {
+  if (user.role === 'admin') return {};
+  return {
+    $or: [
+      { assigneA: user._id },
+      { collaboreurs: user._id },
+      { createdBy: user._id }
+    ]
+  };
+};
+
+const formatDossierAsAudience = (d) => ({
+  _id: `dossier-${d._id}`,
+  _source: 'dossier',
+  titre: `Audience - ${d.titre || d.numero || 'Sans titre'}`,
+  type: 'audience',
+  dateDebut: d.dateAudience,
+  dateFin: d.dateAudience,
+  lieu: d.lieu || '',
+  statut: d.statut,
+  dossierId: { _id: d._id, numero: d.numero, titre: d.titre, typeAffaire: d.typeAffaire },
+  description: `Audience du dossier ${d.numero || ''}`,
+  createdBy: d.createdBy
+});
+
 exports.getAudiences = async (req, res) => {
   try {
-    const query = { type: 'audience' };
-
+    const calendrierQuery = { type: 'audience' };
     const scope = await buildCalendrierScopeForUser(req.user);
     if (Object.keys(scope).length > 0) {
-      Object.assign(query, scope);
+      Object.assign(calendrierQuery, scope);
     }
 
-    const events = await Calendrier.find(query)
-      .populate('dossierId', 'numero titre typeAffaire')
-      .populate('assignes', 'nom prenom')
-      .sort({ dateDebut: 1 });
+    const [calendrierEvents, dossierAudiences] = await Promise.all([
+      Calendrier.find(calendrierQuery)
+        .populate('dossierId', 'numero titre typeAffaire')
+        .populate('assignes', 'nom prenom')
+        .lean(),
 
-    res.json(events);
+      Dossier.find({
+        ...(await buildDossierScopeForUser(req.user)),
+        dateAudience: { $ne: null, $exists: true }
+      })
+        .select('numero titre typeAffaire dateAudience lieu statut createdBy')
+        .lean()
+    ]);
+
+    const dossiersAsAudiences = dossierAudiences.map(formatDossierAsAudience);
+
+    const merged = [...calendrierEvents, ...dossiersAsAudiences].sort((a, b) => {
+      const da = new Date(a.dateDebut).getTime();
+      const db = new Date(b.dateDebut).getTime();
+      return da - db;
+    });
+
+    res.json(merged);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching audiences', error: error.message });
   }
