@@ -165,6 +165,47 @@
             }
           </div>
         }
+
+        <!-- Documents -->
+        <div class="card mt-6">
+          <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span class="material-icons text-lawyer-primary">attach_file</span>
+            Documents
+            <span class="ml-auto text-xs text-slate-400">({{ dossierDocuments().length }})</span>
+          </h2>
+          @if (dossierDocuments().length > 0) {
+            <div class="space-y-2">
+              @for (doc of dossierDocuments(); track doc._id) {
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-lawyer-primary/30 transition-all">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="material-icons text-slate-400">picture_as_pdf</span>
+                    <div class="min-w-0">
+                      <p class="font-medium text-lawyer-dark truncate">{{ doc.nom }}</p>
+                      <p class="text-xs text-slate-500">
+                        <span class="badge text-[10px] px-1.5 py-0.5" [ngClass]="getTypeBadgeClass(doc.type)">{{ getTypeLabel(doc.type) }}</span>
+                        <span class="ml-1">{{ formatFileSize(doc.taille) }}</span>
+                        <span class="ml-1" *ngIf="doc.createdAt">{{ doc.createdAt | date:'dd/MM/yyyy' }}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button (click)="viewDocument(doc)" class="p-2 hover:bg-slate-200 rounded transition-all" title="Voir">
+                      <span class="material-icons text-slate-600 text-sm">visibility</span>
+                    </button>
+                    <button (click)="downloadDocument(doc)" class="p-2 hover:bg-slate-200 rounded transition-all" title="Télécharger">
+                      <span class="material-icons text-slate-600 text-sm">download</span>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+              <span class="material-icons text-3xl text-slate-300 block mb-2">description</span>
+              <p class="text-sm text-slate-500">Aucun document associé à ce dossier</p>
+            </div>
+          }
+        </div>
       </div>
 
       <!-- Sidebar -->

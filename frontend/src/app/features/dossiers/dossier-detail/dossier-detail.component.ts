@@ -6,6 +6,7 @@ import { DossierService } from '../../../core/services/dossier.service';
 import { ClientService } from '../../../core/services/client.service';
 import { UserService, User } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { DocumentService, Document } from '../../../core/services/document.service';
 
 @Component({
   selector: 'app-dossier-detail',
@@ -30,6 +31,8 @@ export class DossierDetailComponent implements OnInit {
   selectedAvocatId = signal<string>('');
   editingAssignee = signal(false);
   savingAssignee = signal(false);
+  private documentService = inject(DocumentService);
+  dossierDocuments = signal<Document[]>([]);
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -43,6 +46,7 @@ export class DossierDetailComponent implements OnInit {
     this.dossierService.getDossierById(id).subscribe({
       next: (dossier) => {
         this.dossier.set(dossier);
+        this.loadDossierDocuments(id);
         const clientId = typeof dossier.clientId === 'object' ? dossier.clientId._id : dossier.clientId;
         if (clientId) {
           this.clientService.getClientById(clientId).subscribe({
@@ -57,6 +61,76 @@ export class DossierDetailComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  loadDossierDocuments(dossierId: string) {
+    this.documentService.getDocuments({ dossierId, limit: 100 }).subscribe({
+      next: (response) => this.dossierDocuments.set(response.documents),
+      error: (err) => console.error('Error loading documents:', err)
+    });
+  }
+
+  downloadDocument(doc: Document) {
+    this.documentService.downloadDocument(doc._id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.nom;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => console.error('Error downloading:', err)
+    });
+  }
+
+  viewDocument(doc: Document) {
+    this.documentService.downloadDocument(doc._id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      },
+      error: (err) => console.error('Error viewing document:', err)
+    });
+  }
+
+  getTypeBadgeClass(type: string): string {
+    const classes: Record<string, string> = {
+      contrat: 'bg-blue-100 text-blue-700',
+      plainte: 'bg-red-100 text-red-700',
+      facture: 'bg-green-100 text-green-700',
+      pouvoir: 'bg-purple-100 text-purple-700',
+      jugement: 'bg-amber-100 text-amber-700',
+      decision: 'bg-indigo-100 text-indigo-700',
+      correspondance: 'bg-slate-100 text-slate-700',
+      requete: 'bg-cyan-100 text-cyan-700',
+      piece_jointe: 'bg-pink-100 text-pink-700',
+      autre: 'bg-slate-100 text-slate-600'
+    };
+    return classes[type] || 'bg-slate-100 text-slate-600';
+  }
+
+  getTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      contrat: 'Contrat',
+      plainte: 'Plainte',
+      facture: 'Facture',
+      pouvoir: 'Pouvoir',
+      jugement: 'Jugement',
+      decision: 'Décision',
+      correspondance: 'Correspondance',
+      requete: 'Requête',
+      piece_jointe: 'Pièce jointe',
+      autre: 'Autre'
+    };
+    return labels[type] || type;
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
   loadAvocats() {
