@@ -203,6 +203,7 @@ export class SidebarComponent {
       'mon-espace': 'Mon espace',
       'mes-taches': 'Mes tâches',
       'messagerie': 'Messagerie',
+      'home': 'Accueil',
       'dashboard': 'Dashboard',
       'taches': 'Tâches',
       'calendrier': 'Calendrier',

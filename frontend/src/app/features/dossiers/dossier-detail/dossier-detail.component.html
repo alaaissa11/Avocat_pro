@@ -206,6 +206,79 @@
             </div>
           }
         </div>
+
+        <!-- Delegation Status -->
+        <div class="card">
+          <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span class="material-icons text-purple-600">swap_horiz</span>
+            Délégation
+          </h2>
+          @if (delegation(); as del) {
+            <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200">
+              <div class="text-sm">
+                @if (del.deleguePar._id === currentUser?.id) {
+                  <span>Délégué à <strong>{{ del.delegueA.prenom }} {{ del.delegueA.nom }}</strong></span>
+                } @else {
+                  <span>Délégué par <strong>{{ del.deleguePar.prenom }} {{ del.deleguePar.nom }}</strong></span>
+                }
+                <span class="badge text-xs ml-2" [ngClass]="getDelegationStatusBadge(del.statut)">{{ getDelegationStatusLabel(del.statut) }}</span>
+              </div>
+              <div class="flex gap-1">
+                @if (del.delegueA._id === currentUser?.id && del.statut === 'en_attente') {
+                  <button (click)="acceptDelegation(del._id)" class="text-xs text-green-600 hover:underline">Accepter</button>
+                  <button (click)="refuseDelegation(del._id)" class="text-xs text-red-600 hover:underline">Refuser</button>
+                }
+                @if (del.deleguePar._id === currentUser?.id && (del.statut === 'en_attente' || del.statut === 'acceptee')) {
+                  <button (click)="terminerDelegation(del._id)" class="text-xs text-red-600 hover:underline">Terminer</button>
+                }
+              </div>
+            </div>
+          } @else {
+            <p class="text-sm text-slate-400 italic mb-3">Aucune délégation active</p>
+          }
+          @if (canDelegate()) {
+            <button (click)="openDelegationModal()" class="text-sm text-lawyer-primary hover:underline mt-2">
+              + Déléguer ce dossier
+            </button>
+          }
+        </div>
+
+        <!-- Comments -->
+        <div class="card">
+          <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span class="material-icons text-lawyer-primary">chat</span>
+            Commentaires ({{ comments().length }})
+          </h2>
+          <div class="space-y-3 mb-3 max-h-60 overflow-y-auto">
+            @for (c of comments(); track c._id) {
+              <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <p class="text-xs font-medium text-lawyer-dark">{{ c.auteur.prenom }} {{ c.auteur.nom }}</p>
+                    <p class="text-sm mt-1">{{ c.contenu }}</p>
+                  </div>
+                  @if (c.auteur._id === currentUser?.id) {
+                    <button (click)="deleteComment(c._id)" class="text-red-400 hover:text-red-600 text-xs" title="Supprimer">
+                      <span class="material-icons text-sm">delete</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <p class="text-sm text-slate-400 italic">Aucun commentaire</p>
+            }
+          </div>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              [(ngModel)]="commentNew"
+              placeholder="Ajouter un commentaire..."
+              class="input-field flex-1 text-sm"
+              (keydown.enter)="addComment()"
+            >
+            <button (click)="addComment()" class="btn-primary text-sm px-3" [disabled]="!commentNew().trim()">Envoyer</button>
+          </div>
+        </div>
       </div>
 
       <!-- Sidebar -->
@@ -310,4 +383,52 @@
       </div>
     </div>
   </div>
+
+  <!-- Delegation Modal -->
+  @if (showDelegationModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+         style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px);"
+         (click)="closeDelegationModal()">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-slide-up"
+           (click)="$event.stopPropagation()">
+        <div class="bg-gradient-to-br from-purple-600 via-purple-600 to-purple-800 px-6 py-4 rounded-t-2xl text-white flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Déléguer le dossier</h3>
+          <button (click)="closeDelegationModal()" class="text-white/80 hover:text-white">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="p-6">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Déléguer à *</label>
+              <select [(ngModel)]="delegationNew().delegueA" class="select-field w-full">
+                <option value="">Sélectionner un utilisateur</option>
+                @for (u of delegationUsers(); track u._id) {
+                  <option [value]="u._id">{{ u.prenom }} {{ u.nom }} ({{ u.role }})</option>
+                }
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Date début *</label>
+                <input type="date" [ngModel]="delegationNew().dateDebut" (ngModelChange)="updateDelegationNew('dateDebut', $event)" class="input-field w-full">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Date fin *</label>
+                <input type="date" [ngModel]="delegationNew().dateFin" (ngModelChange)="updateDelegationNew('dateFin', $event)" class="input-field w-full">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Motif</label>
+              <textarea [ngModel]="delegationNew().motif" (ngModelChange)="updateDelegationNew('motif', $event)" class="input-field w-full" rows="3" placeholder="Raison de la délégation..."></textarea>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-6">
+            <button (click)="closeDelegationModal()" class="btn-secondary">Annuler</button>
+            <button (click)="createDelegation()" class="btn-primary">Déléguer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 }

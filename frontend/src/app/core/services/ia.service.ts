@@ -99,6 +99,15 @@ export interface AIPrediction {
   };
 }
 
+export interface TypeSuggestion {
+  typeAffaire: string;
+  sousTypes: string[];
+  juridiction: string;
+  piecesRequises: string[];
+  score: number;
+  confiance: number;
+}
+
 export interface FeedbackData {
   predictionsRecues: boolean;
   suggestionDureeAcceptee?: boolean;
@@ -148,5 +157,12 @@ export class IaService {
 
   getPlanningTypes(): Observable<any> {
     return this.http.get(`${this.apiUrl}/planning-types`);
+  }
+
+  suggestType(texte: string): Observable<{ success: boolean; data: TypeSuggestion[] }> {
+    return this.http.post<{ success: boolean; data: TypeSuggestion[] }>(
+      `${this.apiUrl}/suggest-type`,
+      { texte }
+    );
   }
 }

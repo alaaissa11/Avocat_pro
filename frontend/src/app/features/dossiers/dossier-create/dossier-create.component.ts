@@ -1,11 +1,13 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { DossierService } from '../../../core/services/dossier.service';
 import { DocumentService } from '../../../core/services/document.service';
 import { ClientService, Client } from '../../../core/services/client.service';
-import { IaService, AIPrediction, FeedbackData } from '../../../core/services/ia.service';
+import { IaService, AIPrediction, FeedbackData, TypeSuggestion } from '../../../core/services/ia.service';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { UserService, User } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { TypeAffaire } from '../../../core/models/dossier.model';
@@ -26,7 +28,7 @@ interface ClientSearchResult {
   templateUrl: './dossier-create.component.html',
   styleUrls: ['./dossier-create.component.css']
 })
-export class DossierCreateComponent implements OnInit {
+export class DossierCreateComponent implements OnInit, OnDestroy {
   private dossierService = inject(DossierService);
   private documentService = inject(DocumentService);
   private clientService = inject(ClientService);
@@ -62,6 +64,16 @@ export class DossierCreateComponent implements OnInit {
   iaLoading = signal(false);
   iaError = signal<string | null>(null);
   predictionId = signal<string>('');
+
+  typeSuggestions = signal<TypeSuggestion[]>([]);
+  typeSuggestionsLoading = signal(false);
+  showTypeSuggestions = signal(false);
+  selectedSuggestion = signal<TypeSuggestion | null>(null);
+  piecesRequises = signal<string[]>([]);
+  sousTypesList = signal<string[]>(['contentieux', 'consultation', 'negociation', 'arbitrage']);
+
+  private typeSearchSubject = new Subject<string>();
+  private typeSearchSub?: Subscription;
 
   acceptedSuggestions = signal<{
     duree: boolean;
@@ -116,6 +128,18 @@ export class DossierCreateComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.typeSearchSub = this.typeSearchSubject.pipe(
+      debounceTime(500),
+      distinctUntilChanged()
+    ).subscribe(text => {
+      if (text.length >= 10) {
+        this.searchType(text);
+      } else {
+        this.typeSuggestions.set([]);
+        this.showTypeSuggestions.set(false);
+      }
+    });
+
     const clientId = this.route.snapshot.queryParamMap.get('clientId');
     if (clientId) {
       this.clientService.getClientById(clientId).subscribe({
@@ -141,6 +165,10 @@ export class DossierCreateComponent implements OnInit {
       },
       error: (err) => console.error('Error loading avocats:', err)
     });
+  }
+
+  ngOnDestroy() {
+    this.typeSearchSub?.unsubscribe();
   }
 
   onClientSearch() {
@@ -289,6 +317,50 @@ export class DossierCreateComponent implements OnInit {
       this.dossier.heureFin = time;
     }
     this.closeTimePicker();
+  }
+
+  onTitleDescriptionChange() {
+    const text = `${this.dossier.titre} ${this.dossier.description}`.trim();
+    this.typeSearchSubject.next(text);
+  }
+
+  searchType(text: string) {
+    this.typeSuggestionsLoading.set(true);
+    this.iaService.suggestType(text).subscribe({
+      next: (res) => {
+        this.typeSuggestions.set(res.data);
+        this.showTypeSuggestions.set(res.data.length > 0);
+        this.typeSuggestionsLoading.set(false);
+      },
+      error: () => {
+        this.typeSuggestions.set([]);
+        this.showTypeSuggestions.set(false);
+        this.typeSuggestionsLoading.set(false);
+      }
+    });
+  }
+
+  selectTypeSuggestion(suggestion: TypeSuggestion) {
+    this.selectedSuggestion.set(suggestion);
+    this.dossier.typeAffaire = suggestion.typeAffaire as TypeAffaire;
+    this.dossier.juridiction = suggestion.juridiction;
+    this.piecesRequises.set(suggestion.piecesRequises);
+    this.showTypeSuggestions.set(false);
+    this.typeSuggestions.set([]);
+    if (suggestion.sousTypes && suggestion.sousTypes.length > 0) {
+      this.sousTypesList.set(suggestion.sousTypes);
+    } else {
+      this.sousTypesList.set(['contentieux', 'consultation', 'negociation', 'arbitrage']);
+    }
+    this.dossier.sousType = '';
+  }
+
+  clearTypeSelection() {
+    this.selectedSuggestion.set(null);
+    this.piecesRequises.set([]);
+    this.sousTypesList.set(['contentieux', 'consultation', 'negociation', 'arbitrage']);
+    this.typeSuggestions.set([]);
+    this.showTypeSuggestions.set(false);
   }
 
   getIaPredictions() {

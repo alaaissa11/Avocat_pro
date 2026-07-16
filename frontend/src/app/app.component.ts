@@ -11,8 +11,8 @@ import { LayoutService } from './core/services/layout.service';
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SidebarComponent, HeaderComponent],
   template: `
-    <div class="flex h-screen bg-lawyer-dark">
-      @if (showLayout()) {
+    @if (showLayout()) {
+      <div class="flex h-screen bg-lawyer-dark">
         <app-sidebar />
         <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
              [class.ml-64]="!sidebarCollapsed()"
@@ -22,12 +22,10 @@ import { LayoutService } from './core/services/layout.service';
             <router-outlet />
           </main>
         </div>
-      } @else {
-        <div class="w-full min-h-screen flex justify-center items-center bg-lawyer-light">
-          <router-outlet />
-        </div>
-      }
-    </div>
+      </div>
+    } @else {
+      <router-outlet />
+    }
   `
 })
 export class AppComponent {
@@ -38,6 +36,6 @@ export class AppComponent {
   sidebarCollapsed = this.layoutService.sidebarCollapsed;
 
   showLayout(): boolean {
-    return this.router.url !== '/login' && this.authService.isAuthenticated();
+    return this.router.url !== '/' && this.router.url !== '/login' && this.authService.isAuthenticated();
   }
 }

@@ -7,6 +7,8 @@ import { DocumentService, Document } from '../../../core/services/document.servi
 import { UserService, User } from '../../../core/services/user.service';
 import { DossierService } from '../../../core/services/dossier.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { DelegationService, Delegation } from '../../../core/services/delegation.service';
+import { CommentaireService, Commentaire } from '../../../core/services/commentaire.service';
 
 @Component({
   selector: 'app-taches-list',
@@ -192,6 +194,11 @@ import { AuthService } from '../../../core/services/auth.service';
                       <button (click)="editTache(tache)" class="p-2 hover:bg-slate-100 rounded" title="Modifier">
                         <span class="material-icons text-slate-600 text-sm">edit</span>
                       </button>
+                      @if (canDelegate()) {
+                        <button (click)="openDelegationModal(tache)" class="p-2 hover:bg-purple-100 rounded" title="Déléguer">
+                          <span class="material-icons text-purple-600 text-sm">swap_horiz</span>
+                        </button>
+                      }
                       <button (click)="deleteTache(tache)" class="p-2 hover:bg-red-100 rounded" title="Supprimer">
                         <span class="material-icons text-red-600 text-sm">delete</span>
                       </button>
@@ -332,10 +339,146 @@ import { AuthService } from '../../../core/services/auth.service';
                 <p class="text-sm text-slate-400 italic">Aucun document joint à cette tâche</p>
               }
             </div>
+
+            <!-- Delegation Status -->
+            <div class="mb-6">
+              <h4 class="text-sm font-semibold text-lawyer-dark flex items-center gap-2 mb-3">
+                <span class="material-icons text-purple-600 text-base">swap_horiz</span>
+                Délégation
+              </h4>
+              @if (delegationSent().length === 0 && delegationReceived().length === 0) {
+                <p class="text-sm text-slate-400 italic">Aucune délégation pour cette tâche</p>
+              }
+              @if (delegationSent().length > 0) {
+                <div class="space-y-2 mb-2">
+                  <p class="text-xs text-slate-500 font-medium">Envoyées</p>
+                  @for (del of delegationSent(); track del._id) {
+                    <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200">
+                      <div class="text-sm">
+                        <span class="font-medium">{{ del.delegueA.prenom }} {{ del.delegueA.nom }}</span>
+                        <span class="badge text-xs ml-2" [ngClass]="getDelegationStatusBadge(del.statut)">{{ getDelegationStatusLabel(del.statut) }}</span>
+                      </div>
+                      @if (del.statut === 'en_attente' || del.statut === 'acceptee') {
+                        <button (click)="terminateDelegation(del._id)" class="text-xs text-red-600 hover:underline">Terminer</button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+              @if (delegationReceived().length > 0) {
+                <div class="space-y-2">
+                  <p class="text-xs text-slate-500 font-medium">Reçues</p>
+                  @for (del of delegationReceived(); track del._id) {
+                    <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200">
+                      <div class="text-sm">
+                        <span class="font-medium">{{ del.deleguePar.prenom }} {{ del.deleguePar.nom }}</span>
+                        <span class="badge text-xs ml-2" [ngClass]="getDelegationStatusBadge(del.statut)">{{ getDelegationStatusLabel(del.statut) }}</span>
+                      </div>
+                      @if (del.statut === 'en_attente') {
+                        <div class="flex gap-1">
+                          <button (click)="acceptDelegation(del._id)" class="text-xs text-green-600 hover:underline">Accepter</button>
+                          <button (click)="refuseDelegation(del._id)" class="text-xs text-red-600 hover:underline">Refuser</button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+              @if (canDelegate()) {
+                <button (click)="openDelegationModal(taskDetail()!)" class="text-sm text-lawyer-primary hover:underline mt-2">
+                  + Déléguer cette tâche
+                </button>
+              }
+            </div>
+
+            <!-- Comments -->
+            <div class="mb-6">
+              <h4 class="text-sm font-semibold text-lawyer-dark flex items-center gap-2 mb-3">
+                <span class="material-icons text-lawyer-primary text-base">chat</span>
+                Commentaires ({{ comments().length }})
+              </h4>
+              <div class="space-y-3 mb-3 max-h-60 overflow-y-auto">
+                @for (c of comments(); track c._id) {
+                  <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                    <div class="flex items-start justify-between gap-2">
+                      <div>
+                        <p class="text-xs font-medium text-lawyer-dark">{{ c.auteur.prenom }} {{ c.auteur.nom }}</p>
+                        <p class="text-sm mt-1">{{ c.contenu }}</p>
+                      </div>
+                      @if (c.auteur._id === currentUser?.id) {
+                        <button (click)="deleteComment(c._id)" class="text-red-400 hover:text-red-600 text-xs" title="Supprimer">
+                          <span class="material-icons text-sm">delete</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                } @empty {
+                  <p class="text-sm text-slate-400 italic">Aucun commentaire</p>
+                }
+              </div>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  [(ngModel)]="commentNew"
+                  placeholder="Ajouter un commentaire..."
+                  class="input-field flex-1 text-sm"
+                  (keydown.enter)="addComment()"
+                >
+                <button (click)="addComment()" class="btn-primary text-sm px-3" [disabled]="!commentNew().trim()">Envoyer</button>
+              </div>
+            </div>
           </div>
 
           <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end rounded-b-2xl">
             <button (click)="closeTaskDetail()" class="btn-secondary">Fermer</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Delegation Modal -->
+    @if (showDelegationModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+           style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px);"
+           (click)="closeDelegationModal()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-slide-up"
+             (click)="$event.stopPropagation()">
+          <div class="bg-gradient-to-br from-purple-600 via-purple-600 to-purple-800 px-6 py-4 rounded-t-2xl text-white flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Déléguer la tâche</h3>
+            <button (click)="closeDelegationModal()" class="text-white/80 hover:text-white">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Déléguer à *</label>
+                <select [(ngModel)]="delegationNew().delegueA" class="select-field w-full">
+                  <option value="">Sélectionner un utilisateur</option>
+                  @for (u of delegationUsers(); track u._id) {
+                    <option [value]="u._id">{{ u.prenom }} {{ u.nom }} ({{ u.role }})</option>
+                  }
+                </select>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Date début *</label>
+                  <input type="date" [ngModel]="delegationNew().dateDebut" (ngModelChange)="updateDelegationNew('dateDebut', $event)" class="input-field w-full">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Date fin *</label>
+                  <input type="date" [ngModel]="delegationNew().dateFin" (ngModelChange)="updateDelegationNew('dateFin', $event)" class="input-field w-full">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Motif</label>
+                <textarea [ngModel]="delegationNew().motif" (ngModelChange)="updateDelegationNew('motif', $event)" class="input-field w-full" rows="3" placeholder="Raison de la délégation..."></textarea>
+              </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+              <button (click)="closeDelegationModal()" class="btn-secondary">Annuler</button>
+              <button (click)="createDelegation()" class="btn-primary">Déléguer</button>
+            </div>
           </div>
         </div>
       </div>
@@ -802,12 +945,25 @@ export class TachesListComponent implements OnInit {
   dossierDocuments = signal<Document[]>([]);
   taskDocuments = signal<Document[]>([]);
 
+  // Delegation
+  showDelegationModal = signal(false);
+  delegationNew = signal({ delegueA: '', dateDebut: '', dateFin: '', motif: '' });
+  delegationSent = signal<Delegation[]>([]);
+  delegationReceived = signal<Delegation[]>([]);
+  delegationUsers = signal<User[]>([]);
+
+  // Comments
+  comments = signal<Commentaire[]>([]);
+  commentNew = signal('');
+
   constructor(
     private tacheService: TacheService,
     private documentService: DocumentService,
     private userService: UserService,
     private dossierService: DossierService,
-    private authService: AuthService
+    private authService: AuthService,
+    private delegationService: DelegationService,
+    private commentaireService: CommentaireService
   ) {}
 
   ngOnInit() {
@@ -1008,6 +1164,8 @@ export class TachesListComponent implements OnInit {
     this.showTaskDetail.set(true);
     this.loadDossierDocuments(tache);
     this.loadTaskDocuments(tache);
+    this.loadComments('tache', tache._id);
+    this.loadDelegations(tache._id);
   }
 
   closeTaskDetail() {
@@ -1015,6 +1173,7 @@ export class TachesListComponent implements OnInit {
     this.taskDetail.set(null);
     this.dossierDocuments.set([]);
     this.taskDocuments.set([]);
+    this.comments.set([]);
   }
 
   loadDossierDocuments(tache: Tache) {
@@ -1146,5 +1305,146 @@ export class TachesListComponent implements OnInit {
         error: (err) => console.error('Error deleting tache:', err)
       });
     }
+  }
+
+  get currentUser() { return this.authService.currentUser(); }
+
+  // ---- Delegation ----
+  canDelegate(): boolean {
+    return this.currentUser?.role === 'avocat' || this.currentUser?.role === 'admin';
+  }
+
+  updateDelegationNew(field: string, value: string) {
+    this.delegationNew.update(v => ({ ...v, [field]: value }));
+  }
+
+  openDelegationModal(tache: Tache) {
+    this.taskDetail.set(tache);
+    this.delegationNew.set({ delegueA: '', dateDebut: '', dateFin: '', motif: '' });
+    this.loadDelegations(tache._id);
+    this.loadDelegationUsers();
+    this.showDelegationModal.set(true);
+  }
+
+  closeDelegationModal() {
+    this.showDelegationModal.set(false);
+    this.delegationNew.set({ delegueA: '', dateDebut: '', dateFin: '', motif: '' });
+  }
+
+  loadDelegations(tacheId: string) {
+    this.delegationService.getEntityDelegation('tache', tacheId).subscribe({
+      next: (res) => {
+        if (res) {
+          const del = res as Delegation;
+          if (del.deleguePar?._id === this.currentUser?.id) {
+            this.delegationSent.set([del]);
+            this.delegationReceived.set([]);
+          } else {
+            this.delegationSent.set([]);
+            this.delegationReceived.set([del]);
+          }
+        } else {
+          this.delegationSent.set([]);
+          this.delegationReceived.set([]);
+        }
+      },
+      error: () => { this.delegationSent.set([]); this.delegationReceived.set([]); }
+    });
+  }
+
+  loadDelegationUsers() {
+    this.userService.getUsers().subscribe({
+      next: (users) => this.delegationUsers.set(users.filter(u => u._id !== this.currentUser?.id)),
+      error: () => this.delegationUsers.set([])
+    });
+  }
+
+  getDelegationStatusBadge(statut: string): string {
+    const badges: Record<string, string> = { 'en_attente': 'badge-warning', 'acceptee': 'badge-success', 'refusee': 'badge-danger', 'terminee': 'badge-info' };
+    return badges[statut] || 'badge-info';
+  }
+
+  getDelegationStatusLabel(statut: string): string {
+    const labels: Record<string, string> = { 'en_attente': 'En attente', 'acceptee': 'Acceptée', 'refusee': 'Refusée', 'terminee': 'Terminée' };
+    return labels[statut] || statut;
+  }
+
+  createDelegation() {
+    const d = this.delegationNew();
+    if (!d.delegueA || !d.dateDebut || !d.dateFin) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+    const tache = this.taskDetail();
+    if (!tache) return;
+    this.delegationService.createDelegation({
+      entiteType: 'tache',
+      entiteId: tache._id,
+      delegueA: d.delegueA,
+      dateDebut: d.dateDebut,
+      dateFin: d.dateFin,
+      motif: d.motif
+    }).subscribe({
+      next: () => {
+        this.loadDelegations(tache._id);
+        this.delegationNew.set({ delegueA: '', dateDebut: '', dateFin: '', motif: '' });
+      },
+      error: (err) => console.error('Error creating delegation:', err)
+    });
+  }
+
+  acceptDelegation(delId: string) {
+    this.delegationService.acceptDelegation(delId).subscribe({
+      next: () => this.loadDelegations(this.taskDetail()!._id),
+      error: (err) => console.error('Error accepting delegation:', err)
+    });
+  }
+
+  refuseDelegation(delId: string) {
+    this.delegationService.refuseDelegation(delId).subscribe({
+      next: () => this.loadDelegations(this.taskDetail()!._id),
+      error: (err) => console.error('Error refusing delegation:', err)
+    });
+  }
+
+  terminateDelegation(delId: string) {
+    this.delegationService.terminerDelegation(delId).subscribe({
+      next: () => this.loadDelegations(this.taskDetail()!._id),
+      error: (err: any) => console.error('Error terminating delegation:', err)
+    });
+  }
+
+  // ---- Comments ----
+  loadComments(entiteType: string, entiteId: string) {
+    this.commentaireService.getComments(entiteType, entiteId).subscribe({
+      next: (res) => this.comments.set(res),
+      error: () => this.comments.set([])
+    });
+  }
+
+  addComment() {
+    const tache = this.taskDetail();
+    if (!tache || !this.commentNew().trim()) return;
+    this.commentaireService.createComment({
+      entiteType: 'tache',
+      entiteId: tache._id,
+      contenu: this.commentNew()
+    }).subscribe({
+      next: () => {
+        this.commentNew.set('');
+        this.loadComments('tache', tache._id);
+      },
+      error: (err) => console.error('Error adding comment:', err)
+    });
+  }
+
+  deleteComment(commentId: string) {
+    this.commentaireService.deleteComment(commentId).subscribe({
+      next: () => {
+        const tache = this.taskDetail();
+        if (tache) this.loadComments('tache', tache._id);
+      },
+      error: (err) => console.error('Error deleting comment:', err)
+    });
   }
 }
