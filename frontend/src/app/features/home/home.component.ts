@@ -161,42 +161,56 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
             </div>
           </div>
           <!-- Footer -->
-          <div class="p-10 md:p-14">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div>
-                <div class="flex items-center gap-3 mb-3">
+          <div class="p-8 md:p-12">
+            <div class="grid grid-cols-2 gap-4 h-full">
+              <!-- Brand -->
+              <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 flex flex-col justify-center hover:border-lawyer-accent hover:shadow-lg hover:shadow-lawyer-accent/10 hover:bg-white/[0.07] transition-all duration-300">
+                <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-gradient-to-br from-lawyer-accent to-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span class="text-lawyer-dark font-serif font-bold">A</span>
                   </div>
                   <div>
-                    <div class="font-serif font-bold text-white text-base">AVOCAT<span class="text-lawyer-accent">PRO</span></div>
+                    <div class="font-serif font-bold text-white text-base leading-tight">AVOCAT<span class="text-lawyer-accent">PRO</span></div>
+                    <p class="text-slate-400 text-xs leading-relaxed mt-0.5">Cabinet Boussayene Knani</p>
                   </div>
                 </div>
-                <p class="text-slate-400 text-xs leading-relaxed">Cabinet Boussayene Knani<br>Conseil &amp; Contentieux</p>
-                <div class="mt-5 pt-5 border-t border-white/10">
-                  <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-3">Liens rapides</h4>
-                  <ul class="space-y-2">
-                    <li><a href="#modules" class="text-xs text-slate-400 hover:text-lawyer-accent transition-colors">Services</a></li>
-                    <li><a href="#expertise" class="text-xs text-slate-400 hover:text-lawyer-accent transition-colors">Expertise</a></li>
-                    <li><a routerLink="/login" class="text-xs text-slate-400 hover:text-lawyer-accent transition-colors">Connexion</a></li>
-                  </ul>
-                </div>
+                <p class="text-slate-500 text-xs mt-3 border-t border-white/5 pt-3">Conseil &amp; Contentieux</p>
               </div>
-              <div>
-                <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-4">Contact</h4>
-                <ul class="space-y-2.5">
-                  <li class="text-xs text-slate-400">Tunis, Tunisie</li>
-                  <li class="text-xs text-slate-400">contact&#64;cabinet.tn</li>
-                  <li class="text-xs text-slate-400">+216 XX XXX XXX</li>
+              <!-- Liens rapides -->
+              <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 flex flex-col justify-center hover:border-lawyer-accent hover:shadow-lg hover:shadow-lawyer-accent/10 hover:bg-white/[0.07] transition-all duration-300">
+                <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-3">Liens rapides</h4>
+                <ul class="space-y-2">
+                  <li><a href="#modules" class="text-xs text-slate-400 hover:text-lawyer-accent transition-colors">Services</a></li>
+                  <li><a href="#expertise" class="text-xs text-slate-400 hover:text-lawyer-accent transition-colors">Expertise</a></li>
+                  <li><a routerLink="/login" class="text-xs text-slate-400 hover:text-lawyer-accent transition-colors">Connexion</a></li>
                 </ul>
-                <div class="mt-5 pt-5 border-t border-white/10">
-                  <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-3">Horaires</h4>
-                  <ul class="space-y-2">
-                    <li class="text-xs text-slate-400">Lun-Ven : 8h30 – 18h</li>
-                    <li class="text-xs text-slate-400">Sam : 9h – 13h</li>
-                    <li class="text-xs text-slate-400">Dim : Fermé</li>
-                  </ul>
-                </div>
+              </div>
+              <!-- Contact -->
+              <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 flex flex-col justify-center hover:border-lawyer-accent hover:shadow-lg hover:shadow-lawyer-accent/10 hover:bg-white/[0.07] transition-all duration-300">
+                <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-3">Contact</h4>
+                <ul class="space-y-2">
+                  <li class="text-xs text-slate-400 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                    Tunis, Tunisie
+                  </li>
+                  <li class="text-xs text-slate-400 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                    contact&#64;cabinet.tn
+                  </li>
+                  <li class="text-xs text-slate-400 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+                    +216 XX XXX XXX
+                  </li>
+                </ul>
+              </div>
+              <!-- Horaires -->
+              <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 flex flex-col justify-center hover:border-lawyer-accent hover:shadow-lg hover:shadow-lawyer-accent/10 hover:bg-white/[0.07] transition-all duration-300">
+                <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-3">Horaires</h4>
+                <ul class="space-y-2">
+                  <li class="flex items-center justify-between text-xs text-slate-400"><span>Lun–Ven</span><span class="text-white/70">8h30 – 18h</span></li>
+                  <li class="flex items-center justify-between text-xs text-slate-400"><span>Samedi</span><span class="text-white/70">9h – 13h</span></li>
+                  <li class="flex items-center justify-between text-xs text-slate-400"><span>Dimanche</span><span class="text-white/50">Fermé</span></li>
+                </ul>
               </div>
             </div>
           </div>
