@@ -3,7 +3,6 @@ const Tache = require('../models/Tache');
 const Document = require('../models/Document');
 const HistoriqueDossier = require('../models/HistoriqueDossier');
 const Operation = require('../models/Operation');
-const iaService = require('../services/iaService');
 
 /**
  * Construit la condition MongoDB qui limite un dossier à un user donné.
@@ -54,11 +53,6 @@ exports.createDossier = async (req, res) => {
     }
     // L'admin peut créer un dossier sans avocat assigné (assigneA reste undefined/null)
     const dossier = new Dossier({ ...body, createdBy: req.user._id });
-
-    if (dossier.description) {
-      const iaPrediction = await iaService.predictCategory(dossier.description);
-      dossier.iaPrediction = iaPrediction;
-    }
 
     await dossier.save();
 

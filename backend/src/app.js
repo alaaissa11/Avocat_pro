@@ -19,6 +19,8 @@ const historiqueRoutes = require('./routes/historique.routes');
 const messageRoutes = require('./routes/message.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const invitationRoutes = require('./routes/invitation.routes');
+const delegationRoutes = require('./routes/delegation.routes');
+const commentaireRoutes = require('./routes/commentaire.routes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -68,6 +70,8 @@ app.use('/api/historique', historiqueRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/invitations', invitationRoutes);
+app.use('/api/delegations', delegationRoutes);
+app.use('/api/commentaires', commentaireRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get('/health', (req, res) => res.json({ status: 'OK', date: new Date() }));

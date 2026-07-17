@@ -11,7 +11,7 @@ const parametrageSchema = new mongoose.Schema({
   },
   categorie: {
     type: String,
-    enum: ['general', 'dossier', 'client', 'facturation', 'notification', ' ia', 'securite'],
+    enum: ['general', 'dossier', 'client', 'facturation', 'notification', 'ia', 'securite'],
     default: 'general'
   },
   modifiable: { type: Boolean, default: true },

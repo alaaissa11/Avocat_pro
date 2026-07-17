@@ -221,11 +221,6 @@ const seedDatabase = async () => {
           avocat: faker.helpers.arrayElement(frenchAdversaryLawyers),
           email: faker.internet.email().toLowerCase()
         },
-        iaPrediction: {
-          categorieSuggeree: typeAffaire,
-          confiance: faker.number.float({ min: 0.6, max: 0.98, multipleOf: 0.01 }),
-          datePrediction: new Date()
-        },
         historique: [],
         createdBy: assignedUser?._id
       });
