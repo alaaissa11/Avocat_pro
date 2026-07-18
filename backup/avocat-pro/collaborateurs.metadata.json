@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"matricule":{"$numberInt":"1"}},"name":"matricule_1","background":true,"unique":true}],"uuid":"1b71ad0a0ead40d5aae68f9b15c52d44","collectionName":"collaborateurs","type":"collection"}

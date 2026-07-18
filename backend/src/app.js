@@ -25,6 +25,11 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+// === 🔧 SERVEUR DYNAMIQUE ===
+// Render fournit automatiquement l'URL externe
+const baseUrl = process.env.RENDER_EXTERNAL_URL || process.env.API_URL || `http://localhost:${process.env.PORT || 3000}`;
+
+// === 🔧 CONFIGURATION SWAGGER ===
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -34,7 +39,12 @@ const swaggerOptions = {
       description: 'API de gestion du cabinet d\'avocats Boussayene Knani Law Firm',
       contact: { name: 'Support', email: 'support@avocat-pro.tn' }
     },
-    servers: [{ url: `http://localhost:${process.env.PORT || 3000}`, description: 'Serveur de développement' }],
+    servers: [
+      {
+        url: baseUrl,
+        description: process.env.RENDER_EXTERNAL_URL ? 'Serveur de production (Render)' : 'Serveur de développement local'
+      }
+    ],
     components: {
       securitySchemes: {
         bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
@@ -47,14 +57,38 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
+// === 🔧 CONFIGURATION CORS (AUTORISE TOUTES LES ORIGINES NÉCESSAIRES) ===
+const allowedOrigins = [
+  'https://avocatpro.netlify.app',       // Frontend Netlify
+  'https://avocat-pro.onrender.com',     // Backend Render
+  'http://localhost:4200',               // Développement local Angular
+  'http://localhost:3000'                // Développement local backend
+];
+
 app.use(cors({
-  origin: 'http://localhost:4200',
-  credentials: true
+  origin: function (origin, callback) {
+    // Permettre les requêtes sans origin (ex: curl, apps mobiles)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS bloque l'origine : ${origin}`);
+      callback(new Error('CORS not allowed from this origin'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Authorization']
 }));
+
+// === MIDDLEWARES ===
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// === ROUTES ===
 app.use('/api/auth', authRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/dossiers', dossierRoutes);
@@ -72,9 +106,14 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/invitations', invitationRoutes);
 app.use('/api/delegations', delegationRoutes);
 app.use('/api/commentaires', commentaireRoutes);
+
+// === SWAGGER ===
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// === HEALTH CHECK ===
 app.get('/health', (req, res) => res.json({ status: 'OK', date: new Date() }));
+
+// === ERROR HANDLER ===
 app.use(errorHandler);
 
 module.exports = app;
