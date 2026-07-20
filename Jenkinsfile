@@ -49,6 +49,11 @@ pipeline {
                 sh 'docker compose build'
             }
         }
+        stage('Docker Deploy') {
+            steps {
+                sh 'docker compose up -d'
+            }
+        }
 
     }
 }
