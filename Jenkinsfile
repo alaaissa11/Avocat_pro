@@ -12,6 +12,7 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('Install Frontend Dependencies') {
             steps {
                 dir('frontend') {
@@ -20,7 +21,13 @@ pipeline {
             }
         }
 
-    }
+        stage('Build Angular') {
+            steps {
+                dir('frontend') {
+                    sh 'npx ng build --configuration production'
+                }
+            }
+        }
 
-        
+    }
 }
