@@ -29,5 +29,13 @@ pipeline {
             }
         }
 
+        stage('Install Backend Dependencies') {
+            steps {
+                dir('backend') {
+                    sh 'npm install'
+                }
+            }
+        }
+
     }
 }
