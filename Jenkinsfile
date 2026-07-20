@@ -54,6 +54,17 @@ pipeline {
                 sh 'docker compose up -d'
             }
         }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                    sonar-scanner \
+                    -Dsonar.projectKey=avocat-pro \
+                    -Dsonar.sources=.
+                    '''
+                }
+            }
+        }
 
     }
 }
