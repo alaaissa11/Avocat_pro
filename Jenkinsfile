@@ -24,7 +24,7 @@ pipeline {
         stage('Build Angular') {
             steps {
                 dir('frontend') {
-                    sh 'npx ng build --configuration production'
+                    sh 'npx ng build --configuration production --no-progress'
                 }
             }
         }
