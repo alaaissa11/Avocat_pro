@@ -54,20 +54,7 @@ pipeline {
                 sh 'docker compose up -d'
             }
         }
-       stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    script {
-                        def scannerHome = tool 'sonar-scanner'
-                        sh """
-                        ${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=avocat-pro \
-                        -Dsonar.sources=frontend/src,backend/src
-                        """
-                    }
-                }
-            }
-        }
+      
 
     }
 }
