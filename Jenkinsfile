@@ -12,7 +12,15 @@ pipeline {
                 checkout scm
             }
         }
+        stage('Install Frontend Dependencies') {
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+    }
 
         
-    }
 }
