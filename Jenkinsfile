@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         nodejs 'node20'
-        sonarRunner 'sonar-scanner'
+        sonarRunnerInstallation 'sonar-scanner'
     }
 
     stages {
