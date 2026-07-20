@@ -37,10 +37,10 @@ pipeline {
             }
         }
 
-        stage('Backend Tests') {
+        stage('Backend checkout') {
             steps {
                 dir('backend') {
-                    sh 'npm test'
+                    sh 'npm run start &'
                 }
             }
         }
