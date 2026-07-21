@@ -37,23 +37,7 @@ pipeline {
             }
         }
 
-        stage('Backend checkout') {
-            steps {
-                dir('backend') {
-                    sh 'npm run start &'
-                }
-            }
-        }
-        stage('Docker Build') {
-            steps {
-                sh 'docker compose build'
-            }
-        }
-        stage('Docker Deploy') {
-            steps {
-                sh 'docker compose up -d'
-            }
-        }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -68,7 +52,49 @@ pipeline {
                 }
             }
         }
-      
+
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker compose build'
+            }
+        }
+
+
+        stage('Docker Login Nexus') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'nexus-credentials',
+                        usernameVariable: 'NEXUS_USER',
+                        passwordVariable: 'NEXUS_PASS'
+                    )
+                ]) {
+                    sh '''
+                    echo $NEXUS_PASS | docker login localhost:8083 \
+                    -u $NEXUS_USER \
+                    --password-stdin
+                    '''
+                }
+            }
+        }
+
+
+        stage('Docker Push Nexus') {
+            steps {
+                sh '''
+                docker push localhost:8083/avocat-backend:1.0
+                docker push localhost:8083/avocat-frontend:1.0
+                '''
+            }
+        }
+
+
+        stage('Docker Deploy') {
+            steps {
+                sh 'docker compose up -d'
+            }
+        }
 
     }
 }
