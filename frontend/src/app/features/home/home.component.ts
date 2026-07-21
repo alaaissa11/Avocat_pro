@@ -21,26 +21,26 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     <!-- Nav -->
     <nav [class.-translate-y-full]="!navVisible()"
          class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 h-16 transition-transform duration-300 ease-in-out">
-      <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-        <a routerLink="/" class="flex items-center gap-3 no-underline">
-          <div class="logo-icon-home">
+      <div class="max-w-7xl mx-auto px-4 md:px-6 h-full flex items-center justify-between">
+        <a routerLink="/" class="flex items-center gap-2 md:gap-3 no-underline min-w-0">
+          <div class="logo-icon-home flex-shrink-0">
             <span class="logo-letter-home">A</span>
             <div class="logo-glow-home"></div>
           </div>
-          <div>
-            <div class="logo-text-home">AVOCAT<span class="logo-accent-home">PRO</span></div>
-            <div class="logo-sub-home">Cabinet Boussayene Knani</div>
+          <div class="min-w-0">
+            <div class="logo-text-home truncate">AVOCAT<span class="logo-accent-home">PRO</span></div>
+            <div class="logo-sub-home hidden sm:block">Cabinet Boussayene Knani</div>
           </div>
         </a>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 md:gap-4 flex-shrink-0">
           <div class="hidden md:flex items-center gap-6">
             <a href="#modules" class="text-sm text-slate-500 hover:text-lawyer-primary transition-colors font-medium">Services</a>
             <a href="#expertise" class="text-sm text-slate-500 hover:text-lawyer-primary transition-colors font-medium">Expertise</a>
-            <a routerLink="/login"
-               class="text-sm px-5 py-2 bg-lawyer-primary text-white font-medium rounded-lg hover:bg-lawyer-secondary transition-all shadow-sm">
-              Connexion
-            </a>
           </div>
+          <a routerLink="/login"
+             class="text-xs md:text-sm px-4 md:px-5 py-2 bg-lawyer-primary text-white font-medium rounded-lg hover:bg-lawyer-secondary transition-all shadow-sm">
+            Connexion
+          </a>
         </div>
       </div>
     </nav>
@@ -56,33 +56,33 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         <div class="max-w-3xl mx-auto text-center">
           <div class="flex justify-center mb-5">
             <div class="flex items-center gap-3">
-              <div class="logo-icon-home" style="width:54px;height:54px;border-radius:15px;">
-                <span class="logo-letter-home" style="font-size:24px;">A</span>
-                <div class="logo-glow-home" style="border-radius:17px;"></div>
+              <div class="logo-icon-home" style="width:44px;height:44px;border-radius:13px;">
+                <span class="logo-letter-home" style="font-size:20px;">A</span>
+                <div class="logo-glow-home" style="border-radius:15px;"></div>
               </div>
               <div class="text-left leading-tight">
-                <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">
+                <div style="font-family:Georgia,serif;font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">
                   AVOCAT<span style="background:linear-gradient(135deg,#c6a052,#d4af37,#e6c65c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">PRO</span>
                 </div>
                 <div style="font-size:13px;color:rgba(255,255,255,0.6);">Cabinet Boussayene Knani</div>
               </div>
             </div>
           </div>
-          <h1 class="font-serif text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.05] mb-6 tracking-tight">
+          <h1 class="font-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.05] mb-6 tracking-tight">
             Conseil &amp;<br>Contentieux
           </h1>
           <p class="text-white/60 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
             Plateforme juridique nouvelle génération : dossiers, clients, audiences, 
             documents, équipe et assistance IA dans un espace unique sécurisé.
           </p>
-          <div class="flex flex-wrap justify-center gap-4 mt-10">
+          <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4 mt-10">
             <a routerLink="/login"
-               class="inline-flex items-center gap-2 px-8 py-3 bg-lawyer-accent text-lawyer-dark font-semibold rounded-lg hover:bg-yellow-400 transition-all shadow-lg text-sm">
+               class="inline-flex items-center gap-2 px-6 sm:px-8 py-3 bg-lawyer-accent text-lawyer-dark font-semibold rounded-lg hover:bg-yellow-400 transition-all shadow-lg text-sm">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
               Accéder à la plateforme
             </a>
             <a href="#modules"
-               class="inline-flex items-center gap-2 px-8 py-3 border-2 border-white/20 text-white/80 font-medium rounded-lg hover:border-white/50 hover:text-white transition-all text-sm">
+               class="inline-flex items-center gap-2 px-6 sm:px-8 py-3 border-2 border-white/20 text-white/80 font-medium rounded-lg hover:border-white/50 hover:text-white transition-all text-sm">
               Découvrir
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
             </a>

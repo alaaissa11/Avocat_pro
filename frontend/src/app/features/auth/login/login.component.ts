@@ -191,6 +191,14 @@ styles: [`
       top: 0;
       left: 0;
     }
+
+    @media (max-width: 900px) {
+      :host {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+    }
     .typewriter {
       display: inline-block;
       border-right: 2px solid #000;
@@ -894,9 +902,14 @@ styles: [`
     }
 
     @media (max-width: 900px) {
+      .page-container {
+        align-items: flex-start;
+        overflow-y: auto;
+      }
       .login-card {
         flex-direction: column;
         max-width: 400px;
+        margin: auto 0;
       }
       .branding-panel {
         width: 100%;
