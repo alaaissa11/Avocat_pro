@@ -15,7 +15,9 @@ import { UserService, User } from '../../core/services/user.service';
 
       <div class="flex-1 flex gap-0 bg-white rounded-xl shadow-card overflow-hidden min-h-0">
         <!-- Conversations List -->
-        <aside class="w-72 border-r border-slate-200 flex flex-col flex-shrink-0">
+        <aside class="w-full md:w-72 border-r border-slate-200 flex flex-col flex-shrink-0"
+               [class.hidden]="selectedUserId() && !showingList()"
+               [class.md:block]="true">
           <div class="p-3 border-b border-slate-100 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-600">Conversations</h2>
             <button (click)="openNewConversation()" class="text-lawyer-primary hover:text-lawyer-secondary text-xs font-medium flex items-center gap-1">
@@ -63,7 +65,9 @@ import { UserService, User } from '../../core/services/user.service';
         </aside>
 
         <!-- Chat Area -->
-        <main class="flex-1 flex flex-col min-w-0">
+        <main class="flex-1 flex flex-col min-w-0"
+              [class.hidden]="!selectedUserId() || showingList()"
+              [class.md:block]="true">
           @if (!selectedUserId()) {
             <div class="flex-1 flex items-center justify-center text-slate-400">
               <div class="text-center">
@@ -73,7 +77,10 @@ import { UserService, User } from '../../core/services/user.service';
             </div>
           } @else {
             <!-- Chat Header -->
-            <div class="p-3 border-b border-slate-200 flex items-center gap-3">
+            <div class="p-3 border-b border-slate-200 flex items-center gap-2 md:gap-3">
+              <button (click)="showingList.set(true)" class="md:hidden p-1 text-slate-500 hover:text-lawyer-primary transition-colors">
+                <span class="material-icons text-lg">arrow_back</span>
+              </button>
               <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
                    [style.background]="selectedUser()?.role === 'avocat' ? 'linear-gradient(135deg, #1a365d, #2c5282)' : 'linear-gradient(135deg, #c6a052, #d4af37)'">
                 {{ getUserInitials(selectedUser()) }}
@@ -135,7 +142,7 @@ import { UserService, User } from '../../core/services/user.service';
     <!-- New Conversation Modal -->
     @if (showNewMessageModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" (click)="closeNewConversation()">
-        <div class="bg-white rounded-xl shadow-xl w-96 max-h-[70vh] flex flex-col" (click)="$event.stopPropagation()">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 max-h-[70vh] flex flex-col" (click)="$event.stopPropagation()">
           <div class="p-4 border-b border-slate-200 flex items-center justify-between">
             <h3 class="text-base font-semibold text-slate-800">Nouveau message</h3>
             <button (click)="closeNewConversation()" class="text-slate-400 hover:text-slate-600">
@@ -196,6 +203,7 @@ export class MessagerieComponent implements OnInit, OnDestroy {
   newMessage = '';
   loadingConversations = signal(true);
   loadingMessages = signal(false);
+  showingList = signal(true);
 
   showNewMessageModal = signal(false);
   availableUsers = signal<User[]>([]);
@@ -242,6 +250,7 @@ export class MessagerieComponent implements OnInit, OnDestroy {
   selectConversation(conv: Conversation) {
     this.selectedUserId.set(conv.user._id);
     this.selectedUser.set(conv.user);
+    this.showingList.set(false);
     this.loadMessages(conv.user._id);
     this.messagerieService.markAsLu(conv.user._id).subscribe();
   }

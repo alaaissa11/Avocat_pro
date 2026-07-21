@@ -55,14 +55,14 @@ import { Dossier } from '../../core/models/dossier.model';
         </select>
       </div>
 
-      <div class="card overflow-hidden p-0">
+      <div class="card overflow-x-auto p-0">
         @if (loading()) {
           <div class="p-8 text-center">
             <span class="material-icons text-4xl text-slate-300 animate-spin block mb-2">refresh</span>
             Chargement...
           </div>
         } @else {
-          <table class="w-full">
+          <table class="w-full min-w-[700px]">
             <thead class="bg-slate-50">
               <tr>
                 <th class="table-header">Nom</th>

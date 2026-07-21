@@ -9,7 +9,11 @@ import { LayoutService } from '../../core/services/layout.service';
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <aside class="fixed left-0 top-0 h-full bg-white border-r border-slate-200 shadow-professional z-50 flex flex-col transition-all duration-300 ease-in-out"
+    @if (mobileOpen()) {
+      <div class="fixed inset-0 bg-black/40 z-40 md:hidden" (click)="layoutService.closeMobileSidebar()"></div>
+    }
+    <aside class="fixed left-0 top-0 h-full bg-white border-r border-slate-200 shadow-professional z-50 flex flex-col transition-all duration-300 ease-in-out md:translate-x-0"
+           [class.-translate-x-full]="!mobileOpen()"
            [class.w-64]="!collapsed()"
            [class.w-16]="collapsed()">
       <!-- Logo -->
@@ -197,6 +201,7 @@ export class SidebarComponent {
   layoutService = inject(LayoutService);
 
   collapsed = this.layoutService.sidebarCollapsed;
+  mobileOpen = this.layoutService.mobileSidebarOpen;
 
   getTitle(key: string): string {
     const map: Record<string, string> = {

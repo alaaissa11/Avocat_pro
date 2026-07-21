@@ -13,14 +13,14 @@ import { interval, Subscription } from 'rxjs';
   imports: [CommonModule, RouterLink, NgClass],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="h-16 bg-lawyer-dark border-b border-lawyer-primary/30 flex items-center justify-between px-6 shadow-card">
-      <div class="flex items-center gap-4 flex-1 max-w-xl">
+    <header class="h-14 md:h-16 bg-lawyer-dark border-b border-lawyer-primary/30 flex items-center justify-between px-3 md:px-6 shadow-card">
+      <div class="flex items-center gap-2 md:gap-4 flex-1 max-w-xl">
         <button (click)="layoutService.toggleSidebar()"
                 class="p-2 text-slate-400 hover:text-white hover:bg-lawyer-primary/40 rounded-xl transition-all border border-transparent hover:border-slate-600/30"
                 title="Afficher/Masquer le menu">
           <span class="material-icons text-lg">menu</span>
         </button>
-        <div class="relative w-full">
+        <div class="relative w-full hidden md:block">
           <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
           <input
             type="text"
@@ -32,7 +32,10 @@ import { interval, Subscription } from 'rxjs';
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1 md:gap-3">
+        <button class="md:hidden p-2 text-slate-400 hover:text-white hover:bg-lawyer-primary/40 rounded-xl transition-all border border-transparent hover:border-slate-600/30" title="Rechercher">
+          <span class="material-icons text-lg">search</span>
+        </button>
         <div class="relative">
           <button (click)="toggleNotifications()" class="relative p-2.5 text-slate-400 hover:text-white hover:bg-lawyer-primary/40 rounded-xl transition-all border border-transparent hover:border-slate-600/30">
             <span class="material-icons text-lg">notifications</span>
@@ -105,8 +108,8 @@ import { interval, Subscription } from 'rxjs';
         </button>
 
         <div class="relative">
-          <button (click)="toggleMenu()" class="flex items-center gap-3 pl-4 border-l border-slate-600/30 hover:bg-lawyer-primary/40 rounded-xl transition-all">
-            <div class="text-right">
+          <button (click)="toggleMenu()" class="flex items-center gap-3 md:pl-4 md:border-l border-slate-600/30 hover:bg-lawyer-primary/40 rounded-xl transition-all">
+            <div class="text-right hidden md:block">
               <p class="text-sm font-semibold text-white">{{ userName() }}</p>
               <p class="text-xs text-lawyer-accent font-medium">{{ userRole() }}</p>
             </div>

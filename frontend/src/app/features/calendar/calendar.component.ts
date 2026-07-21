@@ -30,39 +30,39 @@ interface CalendarEventItem {
   template: `
     <div class="animate-fade-in">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
         <div>
-          <h1 class="page-title">Calendrier</h1>
-          <p class="text-slate-500 text-sm">Planification des audiences et échéances</p>
+          <h1 class="page-title text-lg md:text-xl">Calendrier</h1>
+          <p class="text-slate-500 text-xs md:text-sm">Planification des audiences et échéances</p>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
           <!-- View Toggle -->
-          <div class="flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-1">
+          <div class="flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-1 flex-1 sm:flex-none">
             <button 
               (click)="setView('month')"
-              class="px-3 py-1.5 text-sm rounded transition-all"
+              class="flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded transition-all"
               [ngClass]="currentView() === 'month' ? 'bg-lawyer-primary text-white' : 'hover:bg-slate-100 text-slate-600'"
             >
               Mois
             </button>
             <button 
               (click)="setView('week')"
-              class="px-3 py-1.5 text-sm rounded transition-all"
+              class="flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded transition-all"
               [ngClass]="currentView() === 'week' ? 'bg-lawyer-primary text-white' : 'hover:bg-slate-100 text-slate-600'"
             >
               Semaine
             </button>
             <button 
               (click)="setView('day')"
-              class="px-3 py-1.5 text-sm rounded transition-all"
+              class="flex-1 sm:flex-none px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded transition-all"
               [ngClass]="currentView() === 'day' ? 'bg-lawyer-primary text-white' : 'hover:bg-slate-100 text-slate-600'"
             >
               Jour
             </button>
           </div>
-          <button (click)="openCreateModal()" class="btn-primary flex items-center gap-2">
-            <span class="material-icons text-lg">add</span>
-            Ajouter
+          <button (click)="openCreateModal()" class="btn-primary flex items-center gap-1.5 md:gap-2 text-sm">
+            <span class="material-icons text-base md:text-lg">add</span>
+            <span class="hidden sm:inline">Ajouter</span>
           </button>
         </div>
       </div>
@@ -88,15 +88,15 @@ interface CalendarEventItem {
 
       <!-- Calendar Grid - Month View -->
       @if (currentView() === 'month') {
-        <div class="card overflow-hidden p-0">
+        <div class="card overflow-x-auto p-0">
           <!-- Days Header -->
-          <div class="grid grid-cols-7 bg-lawyer-primary text-white">
+          <div class="grid grid-cols-7 bg-lawyer-primary text-white min-w-[700px]">
             @for (day of weekDays; track day) {
               <div class="py-2 text-center text-xs font-medium">{{ day }}</div>
             }
           </div>
           <!-- Calendar Days -->
-          <div class="grid grid-cols-7">
+          <div class="grid grid-cols-7 min-w-[700px]">
             @for (day of calendarDays(); track day.date) {
               <div 
                 class="border border-slate-100 min-h-[90px] p-1.5 transition-colors cursor-pointer hover:bg-slate-50 text-xs"
@@ -139,8 +139,8 @@ interface CalendarEventItem {
 
       <!-- Calendar Grid - Week View -->
       @if (currentView() === 'week') {
-        <div class="card overflow-hidden p-0">
-          <div class="grid grid-cols-8 bg-lawyer-primary text-white">
+        <div class="card overflow-x-auto p-0">
+          <div class="grid grid-cols-8 bg-lawyer-primary text-white min-w-[800px]">
             <div class="py-2 text-center text-xs font-medium"></div>
             @for (day of getWeekDays(); track day.date) {
               <div class="py-2 text-center text-xs font-medium" [ngClass]="isToday(day.date) ? 'bg-lawyer-dark' : ''">
@@ -148,7 +148,7 @@ interface CalendarEventItem {
               </div>
             }
           </div>
-          <div class="grid grid-cols-8 max-h-[350px] overflow-y-auto">
+          <div class="grid grid-cols-8 max-h-[350px] overflow-y-auto min-w-[800px]">
             @for (hour of hours; track hour) {
               <div class="border border-slate-100 p-1 text-[10px] text-slate-500">
                 {{ hour }}h

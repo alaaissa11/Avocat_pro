@@ -14,12 +14,12 @@ import { FormsModule } from '@angular/forms';
       </div>
 
       <!-- Tabs -->
-      <div class="flex gap-4 mb-6 border-b border-slate-200">
+      <div class="flex gap-2 md:gap-4 mb-6 border-b border-slate-200 overflow-x-auto pb-0 -mb-px">
         <button
           (click)="activeTab = 'general'"
           [class.border-lawyer-primary]="activeTab === 'general'"
           [class.text-lawyer-primary]="activeTab === 'general'"
-          class="px-4 py-2 border-b-2 border-transparent font-medium text-slate-600 hover:text-lawyer-primary transition-colors"
+          class="px-3 md:px-4 py-2 border-b-2 border-transparent font-medium text-slate-600 hover:text-lawyer-primary transition-colors whitespace-nowrap flex-shrink-0 text-sm"
         >
           Général
         </button>
@@ -27,15 +27,15 @@ import { FormsModule } from '@angular/forms';
           (click)="activeTab = 'types'"
           [class.border-lawyer-primary]="activeTab === 'types'"
           [class.text-lawyer-primary]="activeTab === 'types'"
-          class="px-4 py-2 border-b-2 border-transparent font-medium text-slate-600 hover:text-lawyer-primary transition-colors"
+          class="px-3 md:px-4 py-2 border-b-2 border-transparent font-medium text-slate-600 hover:text-lawyer-primary transition-colors whitespace-nowrap flex-shrink-0 text-sm"
         >
-          Types d'affaires
+          Types
         </button>
         <button
           (click)="activeTab = 'users'"
           [class.border-lawyer-primary]="activeTab === 'users'"
           [class.text-lawyer-primary]="activeTab === 'users'"
-          class="px-4 py-2 border-b-2 border-transparent font-medium text-slate-600 hover:text-lawyer-primary transition-colors"
+          class="px-3 md:px-4 py-2 border-b-2 border-transparent font-medium text-slate-600 hover:text-lawyer-primary transition-colors whitespace-nowrap flex-shrink-0 text-sm"
         >
           Utilisateurs
         </button>
@@ -43,9 +43,9 @@ import { FormsModule } from '@angular/forms';
           (click)="activeTab = 'ia'"
           [class.border-lawyer-primary]="activeTab === 'ia'"
           [class.text-lawyer-primary]="activeTab === 'ia'"
-          class="px-4 py-2 border-b-2 border-transparent font-medium text-slate-600 hover:text-lawyer-primary transition-colors"
+          class="px-3 md:px-4 py-2 border-b-2 border-transparent font-medium text-slate-600 hover:text-lawyer-primary transition-colors whitespace-nowrap flex-shrink-0 text-sm"
         >
-          IA & Prédictions
+          IA
         </button>
       </div>
 
@@ -103,12 +103,13 @@ import { FormsModule } from '@angular/forms';
       }
 
       @if (activeTab === 'users') {
-        <div class="card">
+        <div class="card overflow-hidden">
           <div class="flex items-center justify-between mb-4">
             <h3 class="section-title mb-0">Utilisateurs</h3>
             <button class="btn-primary text-sm py-2">Ajouter un utilisateur</button>
           </div>
-          <table class="w-full">
+          <div class="overflow-x-auto">
+          <table class="w-full min-w-[600px]">
             <thead class="bg-slate-50">
               <tr>
                 <th class="table-header">Nom</th>
@@ -132,6 +133,7 @@ import { FormsModule } from '@angular/forms';
               }
             </tbody>
           </table>
+          </div>
         </div>
       }
 

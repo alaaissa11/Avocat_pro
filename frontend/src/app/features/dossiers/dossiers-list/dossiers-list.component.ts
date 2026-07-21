@@ -465,7 +465,8 @@ import { Dossier, DossierStats } from '../../../core/models/dossier.model';
             Chargement...
           </div>
         } @else {
-          <table class="w-full">
+          <div class="overflow-x-auto">
+          <table class="w-full min-w-[800px]">
             <thead class="bg-slate-50">
               <tr>
                 <th class="table-header">N° Dossier</th>
@@ -524,6 +525,7 @@ import { Dossier, DossierStats } from '../../../core/models/dossier.model';
               }
             </tbody>
           </table>
+          </div>
         }
       </div>
 
