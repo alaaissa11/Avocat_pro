@@ -12,19 +12,14 @@ pipeline {
                 checkout scm
             }
         }
-
-        stage('Install Frontend Dependencies') {
+        
+        stage('Build Frontend') {
             steps {
                 dir('frontend') {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Build Angular') {
-            steps {
-                dir('frontend') {
-                    sh 'npx ng build --configuration production --no-progress'
+                    sh '''
+                        npm install
+                        npx ng build --configuration production --no-progress
+                    '''
                 }
             }
         }
@@ -61,7 +56,7 @@ pipeline {
         }
 
 
-        stage('Docker Login Nexus') {
+        stage('Docker Push to Nexus') {
             steps {
                 withCredentials([
                     usernamePassword(
@@ -71,21 +66,14 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                    echo $NEXUS_PASS | docker login localhost:8083 \
-                    -u $NEXUS_USER \
-                    --password-stdin
+                        echo $NEXUS_PASS | docker login localhost:8083 \
+                        -u $NEXUS_USER \
+                        --password-stdin
+
+                        docker push localhost:8083/avocat-backend:1.0
+                        docker push localhost:8083/avocat-frontend:1.0
                     '''
                 }
-            }
-        }
-
-
-        stage('Docker Push Nexus') {
-            steps {
-                sh '''
-                docker push localhost:8083/avocat-backend:1.0
-                docker push localhost:8083/avocat-frontend:1.0
-                '''
             }
         }
 
