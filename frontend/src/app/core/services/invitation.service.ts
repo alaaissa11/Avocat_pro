@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface Invitation {
   _id: string;
@@ -14,7 +15,7 @@ export interface Invitation {
 
 @Injectable({ providedIn: 'root' })
 export class InvitationService {
-  private apiUrl = 'http://localhost:3000/api/invitations';
+  private apiUrl = `${environment.apiUrl}/api/invitations`;
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 

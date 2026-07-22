@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface Delegation {
   _id: string;
@@ -18,7 +19,7 @@ export interface Delegation {
 
 @Injectable({ providedIn: 'root' })
 export class DelegationService {
-  private apiUrl = 'http://localhost:3000/api/delegations';
+  private apiUrl = `${environment.apiUrl}/api/delegations`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

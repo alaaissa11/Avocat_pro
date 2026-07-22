@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface Operation {
   _id: string;
@@ -20,7 +21,7 @@ export interface OperationsResponse {
 
 @Injectable({ providedIn: 'root' })
 export class OperationService {
-  private apiUrl = 'http://localhost:3000/api/operations';
+  private apiUrl = `${environment.apiUrl}/api/operations`;
 
   constructor(private http: HttpClient) {}
 

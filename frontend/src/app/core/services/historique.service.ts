@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface HistoriqueDocument {
   _id?: string;
@@ -57,7 +58,7 @@ export interface HistoriqueResponse {
   providedIn: 'root'
 })
 export class HistoriqueService {
-  private apiUrl = 'http://localhost:3000/api/historique';
+  private apiUrl = `${environment.apiUrl}/api/historique`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

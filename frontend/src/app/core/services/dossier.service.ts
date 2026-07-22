@@ -3,12 +3,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Dossier, DossierResponse, DossierStats } from '../models/dossier.model';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DossierService {
-  private apiUrl = 'http://localhost:3000/api/dossiers';
+  private apiUrl = `${environment.apiUrl}/api/dossiers`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

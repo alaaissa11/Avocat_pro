@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface CalendrierEvent {
   _id: string;
@@ -27,7 +28,7 @@ export interface CalendrierEvent {
   providedIn: 'root'
 })
 export class CalendrierService {
-  private apiUrl = 'http://localhost:3000/api/calendrier';
+  private apiUrl = `${environment.apiUrl}/api/calendrier`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

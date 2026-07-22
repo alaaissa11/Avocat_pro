@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface Commentaire {
   _id: string;
@@ -15,7 +16,7 @@ export interface Commentaire {
 
 @Injectable({ providedIn: 'root' })
 export class CommentaireService {
-  private apiUrl = 'http://localhost:3000/api/commentaires';
+  private apiUrl = `${environment.apiUrl}/api/commentaires`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
