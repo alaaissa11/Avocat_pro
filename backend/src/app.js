@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const client = require('prom-client');
 
 const authRoutes = require('./routes/auth.routes');
 const clientRoutes = require('./routes/client.routes');
@@ -24,6 +25,14 @@ const commentaireRoutes = require('./routes/commentaire.routes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
+
+// === PROMETHEUS METRICS ===
+client.collectDefaultMetrics();
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
 
 // === 🔧 SERVEUR DYNAMIQUE ===
 // Render fournit automatiquement l'URL externe

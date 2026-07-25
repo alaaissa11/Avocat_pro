@@ -76,7 +76,31 @@ pipeline {
                 }
             }
         }
+        stage('Docker Push Docker Hub') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login \
+                        -u $DOCKER_USER \
+                        --password-stdin
 
+                    docker tag avocat-backend:latest $DOCKER_USER/avocat-backend:latest
+                    docker tag avocat-frontend:latest $DOCKER_USER/avocat-frontend:latest
+
+                    docker push $DOCKER_USER/avocat-backend:latest
+                    docker push $DOCKER_USER/avocat-frontend:latest
+
+                    docker logout
+                    '''
+                }
+            }
+        }
 
         stage('Docker Deploy') {
             steps {
