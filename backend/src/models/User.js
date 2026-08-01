@@ -25,6 +25,8 @@ const userSchema = new mongoose.Schema({
   // - avocat créé par admin : ownerId = admin._id
   // - collaborateur créé par avocat : ownerId = avocat._id
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+  resetPasswordToken: { type: String, default: null },
+  resetPasswordExpires: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

@@ -90,6 +90,63 @@ import { UserService, User } from '../../core/services/user.service';
         </div>
       </div>
 
+      <!-- SÉCURITÉ -->
+      <div class="card p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100">
+              <span class="material-icons text-slate-600">lock</span>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-slate-700">Sécurité</p>
+              <p class="text-xs text-slate-500">Modifier mon mot de passe</p>
+            </div>
+          </div>
+          <button (click)="togglePasswordForm()" class="px-3 py-1.5 text-xs rounded-lg font-medium transition-all hover:bg-slate-100 text-slate-600 border border-slate-200">
+            <span class="flex items-center gap-1">
+              <span class="material-icons text-sm">{{ showPasswordForm() ? 'expand_less' : 'edit' }}</span>
+              {{ showPasswordForm() ? 'Fermer' : 'Modifier' }}
+            </span>
+          </button>
+        </div>
+
+        @if (showPasswordForm()) {
+          <form (ngSubmit)="changePassword()" class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="form-label">Mot de passe actuel</label>
+              <input type="password" [(ngModel)]="pwdCurrent" name="pwdCurrent" class="input-field" placeholder="••••••••" required>
+            </div>
+            <div>
+              <label class="form-label">Nouveau mot de passe</label>
+              <input type="password" [(ngModel)]="pwdNew" name="pwdNew" class="input-field" placeholder="8 caractères min." required minlength="8">
+            </div>
+            <div>
+              <label class="form-label">Confirmation</label>
+              <input type="password" [(ngModel)]="pwdConfirm" name="pwdConfirm" class="input-field" placeholder="••••••••" required>
+            </div>
+            <div class="md:col-span-3 flex items-center gap-3 justify-end">
+              @if (pwdError()) {
+                <span class="text-xs text-red-600">{{ pwdError() }}</span>
+              }
+              @if (pwdSuccess()) {
+                <span class="text-xs text-green-600 flex items-center gap-1">
+                  <span class="material-icons text-sm">check_circle</span>
+                  Mot de passe modifié avec succès
+                </span>
+              }
+              <button type="submit" [disabled]="savingPassword()" class="btn-primary !py-2 !px-4 text-sm flex items-center gap-2">
+                @if (savingPassword()) {
+                  <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                } @else {
+                  <span class="material-icons text-sm">save</span>
+                }
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+
       <!-- STATS -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="card hover:shadow-hover transition-all">
@@ -596,6 +653,14 @@ export class MonEspaceComponent implements OnInit {
   savingFeedback = signal(false);
   savingStatut = signal(false);
 
+  showPasswordForm = signal(false);
+  pwdCurrent = '';
+  pwdNew = '';
+  pwdConfirm = '';
+  pwdError = signal('');
+  pwdSuccess = signal(false);
+  savingPassword = signal(false);
+
   currentStatut = computed(() => this.authService.currentUser()?.statut || 'actif');
 
   constructor(
@@ -634,6 +699,48 @@ export class MonEspaceComponent implements OnInit {
         this.savingStatut.set(false);
       },
       error: () => this.savingStatut.set(false)
+    });
+  }
+
+  togglePasswordForm() {
+    this.showPasswordForm.update(v => !v);
+    this.pwdError.set('');
+    this.pwdSuccess.set(false);
+    this.pwdCurrent = '';
+    this.pwdNew = '';
+    this.pwdConfirm = '';
+  }
+
+  changePassword() {
+    if (!this.pwdCurrent || !this.pwdNew || !this.pwdConfirm) {
+      this.pwdError.set('Veuillez remplir tous les champs');
+      return;
+    }
+    if (this.pwdNew.length < 8) {
+      this.pwdError.set('Le nouveau mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+    if (this.pwdNew !== this.pwdConfirm) {
+      this.pwdError.set('Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    this.pwdError.set('');
+    this.pwdSuccess.set(false);
+    this.savingPassword.set(true);
+
+    this.authService.changePassword(this.pwdCurrent, this.pwdNew).subscribe({
+      next: () => {
+        this.savingPassword.set(false);
+        this.pwdSuccess.set(true);
+        this.pwdCurrent = '';
+        this.pwdNew = '';
+        this.pwdConfirm = '';
+      },
+      error: (err) => {
+        this.savingPassword.set(false);
+        this.pwdError.set(err.error?.message || 'Erreur lors du changement de mot de passe');
+      }
     });
   }
 

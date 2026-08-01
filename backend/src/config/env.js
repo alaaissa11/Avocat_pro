@@ -10,5 +10,13 @@ module.exports = {
   upload: {
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE) || 10485760,
     allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+  },
+  email: {
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT) || 587,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+    from: process.env.EMAIL_FROM || 'AVOCAT-PRO <no-reply@avocat-pro.tn>',
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:4200'
   }
 };

@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 const jwtConfig = require('../config/jwt');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 const defaultPermissions = {
   admin: ['read', 'write', 'delete', 'manage_users', 'manage_dossiers', 'manage_clients', 'view_stats'],
@@ -8,6 +10,8 @@ const defaultPermissions = {
   assistant: ['read', 'write', 'manage_dossiers', 'manage_clients'],
   secretaire: ['read', 'manage_clients']
 };
+
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 exports.register = async (req, res) => {
   try {
@@ -125,6 +129,57 @@ exports.changePassword = async (req, res) => {
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error changing password', error: error.message });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'Email requis' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(200).json({ message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = hashToken(token);
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await user.save();
+
+    await sendPasswordResetEmail(user.email, token, user.prenom);
+
+    res.status(200).json({ message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors de la demande de réinitialisation', error: error.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: 'Token et nouveau mot de passe requis' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 8 caractères' });
+    }
+
+    const user = await User.findOne({ resetPasswordToken: hashToken(token) });
+    if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({ message: 'Lien de réinitialisation invalide ou expiré' });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    res.status(200).json({ message: 'Mot de passe réinitialisé avec succès' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors de la réinitialisation', error: error.message });
   }
 };
 
