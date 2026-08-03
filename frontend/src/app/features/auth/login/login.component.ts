@@ -16,50 +16,50 @@ import { AuthService } from '../../../core/services/auth.service';
         <div class="shape shape-3"></div>
         <div class="shape shape-4"></div>
       </div>
-      
+
       <div class="login-card">
+        <!-- PANNEAU BRANDING -->
         <div class="branding-panel">
           <div class="brand-decoration"></div>
           <div class="brand-decoration-2"></div>
           <div class="branding-content">
-            <div class="logo-section fade-in">
+            <div class="logo-section">
               <div class="logo-icon">
                 <span class="logo-letter">A</span>
                 <div class="logo-glow"></div>
               </div>
               <div class="logo-text">
                 <h1>AVOCAT<span class="accent">PRO</span></h1>
+                
                 <p class="subtitle">Cabinet Boussayene Knani</p>
               </div>
             </div>
 
-            <div class="tagline fade-in" style="animation-delay: 0.1s">
-              <h2 class="typewriter">
-                {{ displayText }}
-              </h2>
+            <div class="tagline">
+              <h2 class="typewriter">{{ displayText }}</h2>
               <p>Solution numérique pour le suivi automatisé de vos dossiers avec traçabilité complète.</p>
             </div>
 
             <div class="features">
-              <div class="feature-item fade-in" style="animation-delay: 0.2s">
+              <div class="feature-item">
                 <div class="feature-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 </div>
                 <span>Sécurité des données</span>
               </div>
-              <div class="feature-item fade-in" style="animation-delay: 0.3s">
+              <div class="feature-item">
                 <div class="feature-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
                 </div>
                 <span>Traçabilité complète</span>
               </div>
-              <div class="feature-item fade-in" style="animation-delay: 0.4s">
+              <div class="feature-item">
                 <div class="feature-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
                 <span>Collaboration optimisée</span>
               </div>
-              <div class="feature-item fade-in" style="animation-delay: 0.5s">
+              <div class="feature-item">
                 <div class="feature-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m9 9 6 6 4-4"/></svg>
                 </div>
@@ -67,17 +67,18 @@ import { AuthService } from '../../../core/services/auth.service';
               </div>
             </div>
 
-            <div class="branding-footer fade-in" style="animation-delay: 0.6s">
+            <div class="branding-footer">
               <p>© 2024 Cabinet Boussayene Knani</p>
               <p class="footer-tagline">Excellence Juridique & Innovation</p>
             </div>
           </div>
         </div>
 
+        <!-- PANNEAU FORMULAIRE -->
         <div class="form-panel">
           <div class="form-decoration"></div>
           <div class="form-content">
-            <div class="form-header fade-in" style="animation-delay: 0.3s">
+            <div class="form-header">
               <div class="form-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
               </div>
@@ -86,7 +87,7 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
 
             <form (ngSubmit)="onLogin()" class="login-form">
-              <div class="input-group fade-in" style="animation-delay: 0.4s">
+              <div class="input-group">
                 <label>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                   Email professionnel
@@ -101,7 +102,7 @@ import { AuthService } from '../../../core/services/auth.service';
                 >
               </div>
 
-              <div class="input-group fade-in" style="animation-delay: 0.5s">
+              <div class="input-group">
                 <label>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   Mot de passe
@@ -125,7 +126,7 @@ import { AuthService } from '../../../core/services/auth.service';
                 </div>
               </div>
 
-              <div class="form-options fade-in" style="animation-delay: 0.6s">
+              <div class="form-options">
                 <label class="remember-me">
                   <input type="checkbox">
                   <span class="checkmark"></span>
@@ -135,13 +136,13 @@ import { AuthService } from '../../../core/services/auth.service';
               </div>
 
               @if (error()) {
-                <div class="error-box fade-in">
+                <div class="error-box">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
                   {{ error() }}
                 </div>
               }
 
-              <button type="submit" [disabled]="loading()" class="login-btn fade-in" style="animation-delay: 0.7s">
+              <button type="submit" [disabled]="loading()" class="login-btn">
                 @if (loading()) {
                   <span class="spinner"></span>
                   Connexion en cours...
@@ -152,36 +153,20 @@ import { AuthService } from '../../../core/services/auth.service';
               </button>
             </form>
 
-            <div class="form-footer fade-in" style="animation-delay: 0.8s">
+            <div class="form-footer">
               <p>Vous êtes un nouveau client ? <a href="#">Créer un compte</a></p>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <script>
-      const text = "Gestion Juridique Intelligente";
-      let i = 0;
-
-      function typeWriter() {
-        if (i < text.length) {
-          document.getElementById("typewriter").innerHTML += text.charAt(i);
-          i++;
-          setTimeout(typeWriter, 80); // vitesse
-        }
-      }
-
-      window.addEventListener("load", typeWriter);
-    </script>
   `,
-styles: [`
+  styles: [`
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
 
     :host {
       display: block;
@@ -194,34 +179,22 @@ styles: [`
 
     @media (max-width: 900px) {
       :host {
+        position: static;
+        width: 100%;
         height: auto;
         min-height: 100vh;
         overflow-y: auto;
       }
     }
-    .typewriter {
-      display: inline-block;
-      border-right: 2px solid #000;
-      white-space: pre-line;
-      overflow: hidden;
-      animation: blinkCursor 0.7s infinite;
-      max-width: 100%;
-    }
 
-    @keyframes blinkCursor {
-      50% {
-          border-color: transparent;
-      }
-    }
-
+    /* ===== CONTENEUR ===== */
     .page-container {
       width: 100%;
       height: 100%;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-      padding: 20px;
       position: relative;
       overflow: hidden;
     }
@@ -247,7 +220,6 @@ styles: [`
       background: linear-gradient(135deg, #c6a052 0%, #d4af37 100%);
       top: -200px;
       right: -200px;
-      animation-delay: 0s;
     }
 
     .shape-2 {
@@ -287,79 +259,35 @@ styles: [`
       75% { transform: translate(15px, 15px) scale(1.02) rotate(2deg); }
     }
 
+    /* ===== CARTE PLEINE PAGE ===== */
     .login-card {
-      display: flex;
-      width: 100%;
-      max-width: 600px;
-      background: rgba(255, 255, 255, 0.97);
-      border-radius: 20px;
-      box-shadow: 
-        0 20px 40px -10px rgba(0, 0, 0, 0.4),
-        0 0 0 1px rgba(255, 255, 255, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      overflow: hidden;
       position: relative;
       z-index: 1;
-      backdrop-filter: blur(20px);
+      display: flex;
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      background: rgba(255, 255, 255, 0.97);
+      overflow: hidden;
       animation: cardAppear 0.5s ease-out;
     }
 
     @keyframes cardAppear {
-      from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.98);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
-    .fade-in {
-      opacity: 0;
-      animation: fadeInUp 0.6s ease forwards;
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .typing-effect {
-      overflow: hidden;
-      white-space: nowrap;
-      animation: typing 2s steps(40) forwards;
-    }
-
-    @keyframes typing {
-      from { width: 0; }
-      to { width: 100%; }
-    }
-
-    .blink-cursor::after {
-      content: '|';
-      animation: blink 0.8s infinite;
-    }
-
-    @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
-    }
-
+    /* ===== PANNEAU BRANDING ===== */
     .branding-panel {
-      width: 44%;
+      width: 50%;
       background: linear-gradient(160deg, #1a365d 0%, #0d1b2a 60%, #1a365d 100%);
       color: white;
       display: flex;
       flex-direction: column;
       position: relative;
       overflow: hidden;
+      padding: 40px 48px;
     }
 
     .brand-decoration {
@@ -387,21 +315,9 @@ styles: [`
       50% { opacity: 0.7; transform: scale(1.15); }
     }
 
-    .branding-panel::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 180px;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
-      pointer-events: none;
-    }
-
     .branding-content {
       position: relative;
       z-index: 2;
-      padding: 24px 28px;
       display: flex;
       flex-direction: column;
       flex: 1;
@@ -411,23 +327,32 @@ styles: [`
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 32px;
     }
 
     .logo-icon {
-      width: 42px;
-      height: 42px;
+      width: 48px;
+      height: 48px;
       background: linear-gradient(145deg, #c6a052 0%, #d4af37 50%, #e6c65c 100%);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 
+      box-shadow:
         0 5px 15px rgba(198, 160, 82, 0.4),
         0 2px 8px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.4);
       position: relative;
       animation: logoFloat 4s ease-in-out infinite;
+    }
+
+    .logo-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: rgba(255, 255, 255, 0.25);
+      opacity: 0;
+      transition: opacity 0.3s;
     }
 
     @keyframes logoFloat {
@@ -437,36 +362,19 @@ styles: [`
 
     .logo-letter {
       font-family: Georgia, serif;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: bold;
       color: #1a365d;
-      z-index: 2;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    .logo-glow {
-      position: absolute;
-      inset: -4px;
-      background: linear-gradient(145deg, rgba(198, 160, 82, 0.4), transparent);
-      border-radius: 14px;
-      filter: blur(8px);
-      animation: glow 3s ease-in-out infinite;
-    }
-
-    @keyframes glow {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
     }
 
     .logo-text h1 {
       font-family: Georgia, serif;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       margin: 0;
-      letter-spacing: -0.5px;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+      color: white;
     }
-
+    
     .accent {
       background: linear-gradient(135deg, #c6a052 0%, #d4af37 50%, #e6c65c 100%);
       -webkit-background-clip: text;
@@ -475,52 +383,65 @@ styles: [`
     }
 
     .subtitle {
-      font-size: 11px;
+      font-size: 12px;
       color: rgba(255, 255, 255, 0.75);
       margin: 2px 0 0 0;
-      font-weight: 400;
-      letter-spacing: 0.5px;
     }
 
     .tagline {
-      margin-bottom: 16px;
+      margin-bottom: 28px;
     }
 
     .tagline h2 {
       font-family: Georgia, serif;
-      font-size: 18px;
+      font-size: 26px;
       font-weight: 600;
-      margin: 0 0 8px 0;
+      margin: 0 0 10px 0;
       line-height: 1.25;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+      min-height: 66px;
+      color: white;
     }
 
     .tagline p {
-      font-size: 12px;
+      font-size: 14px;
       color: rgba(255, 255, 255, 0.75);
-      line-height: 1.5;
-      margin: 0;
+      line-height: 1.6;
+      max-width: 480px;
+    }
+
+    .typewriter {
+      display: inline-block;
+      border-right: 2px solid #c6a052;
+      white-space: pre-line;
+      overflow: hidden;
+      animation: blinkCursor 0.7s infinite;
+      max-width: 100%;
+    }
+
+    @keyframes blinkCursor {
+      50% { border-color: transparent; }
     }
 
     .features {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       flex: 1;
+      justify-content: center;
     }
 
     .feature-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 12px;
+      gap: 12px;
+      font-size: 14px;
       color: rgba(255, 255, 255, 0.9);
-      padding: 10px 14px;
+      padding: 12px 16px;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.12);
       transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: default;
+      max-width: 480px;
     }
 
     .feature-item:hover {
@@ -530,8 +451,8 @@ styles: [`
     }
 
     .feature-icon {
-      width: 28px;
-      height: 28px;
+      width: 34px;
+      height: 34px;
       background: linear-gradient(135deg, rgba(198, 160, 82, 0.25) 0%, rgba(198, 160, 82, 0.1) 100%);
       border-radius: 8px;
       display: flex;
@@ -539,41 +460,41 @@ styles: [`
       justify-content: center;
       color: #c6a052;
       flex-shrink: 0;
-      transition: all 0.3s ease;
     }
 
-    .feature-item:hover .feature-icon {
-      background: linear-gradient(135deg, rgba(198, 160, 82, 0.4) 0%, rgba(198, 160, 82, 0.2) 100%);
-      transform: scale(1.05);
+    .feature-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
     .branding-footer {
-      padding-top: 16px;
+      padding-top: 20px;
       border-top: 1px solid rgba(255, 255, 255, 0.12);
       margin-top: auto;
     }
 
     .branding-footer p {
-      font-size: 10px;
+      font-size: 11px;
       color: rgba(255, 255, 255, 0.5);
       margin: 0;
     }
 
     .footer-tagline {
-      font-size: 9px !important;
-      color: rgba(198, 160, 82, 0.8) !important;
-      margin-top: 4px !important;
+      font-size: 10px;
+      color: rgba(198, 160, 82, 0.8);
+      margin-top: 4px;
       font-weight: 500;
       letter-spacing: 1px;
       text-transform: uppercase;
     }
 
+    /* ===== PANNEAU FORMULAIRE ===== */
     .form-panel {
-      width: 56%;
+      width: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 40px;
       background: white;
       position: relative;
       overflow: hidden;
@@ -591,19 +512,19 @@ styles: [`
 
     .form-content {
       width: 100%;
-      max-width: 280px;
+      max-width: 400px;
       position: relative;
       z-index: 1;
     }
 
     .form-header {
-      margin-bottom: 20px;
+      margin-bottom: 28px;
       text-align: center;
     }
 
     .form-icon {
-      width: 48px;
-      height: 48px;
+      width: 56px;
+      height: 56px;
       background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
       border-radius: 50%;
       display: flex;
@@ -612,16 +533,10 @@ styles: [`
       margin: 0 auto 14px;
       color: white;
       box-shadow: 0 6px 20px rgba(26, 54, 93, 0.35);
-      animation: iconPulse 3s ease-in-out infinite;
-    }
-
-    @keyframes iconPulse {
-      0%, 100% { box-shadow: 0 6px 20px rgba(26, 54, 93, 0.35); }
-      50% { box-shadow: 0 8px 25px rgba(26, 54, 93, 0.45); }
     }
 
     .form-header h2 {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: 700;
       color: #1a365d;
       margin: 0 0 8px 0;
@@ -629,7 +544,7 @@ styles: [`
     }
 
     .form-header p {
-      font-size: 13px;
+      font-size: 14px;
       color: #64748b;
       margin: 0;
     }
@@ -637,7 +552,7 @@ styles: [`
     .login-form {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
     }
 
     .input-group {
@@ -647,7 +562,7 @@ styles: [`
     }
 
     .input-group label {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       color: #374151;
       display: flex;
@@ -656,6 +571,8 @@ styles: [`
     }
 
     .input-group label svg {
+      width: 16px;
+      height: 16px;
       color: #1a365d;
     }
 
@@ -682,10 +599,10 @@ styles: [`
 
     .input-field {
       width: 100%;
-      padding: 10px 12px;
+      padding: 13px 14px;
       border: 2px solid #e5e7eb;
       border-radius: 10px;
-      font-size: 13px;
+      font-size: 14px;
       outline: none;
       background: #f9fafb;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -711,7 +628,7 @@ styles: [`
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 13px;
     }
 
     .remember-me {
@@ -744,7 +661,7 @@ styles: [`
     }
 
     .remember-me input:checked + .checkmark::after {
-      content: '✓';
+      content: '\\2713';
       color: white;
       font-size: 10px;
       font-weight: bold;
@@ -798,12 +715,12 @@ styles: [`
 
     .login-btn {
       width: 100%;
-      padding: 12px 20px;
+      padding: 14px 20px;
       background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
       color: white;
       border: none;
       border-radius: 10px;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -863,13 +780,13 @@ styles: [`
 
     .form-footer {
       text-align: center;
-      margin-top: 16px;
-      padding-top: 14px;
+      margin-top: 20px;
+      padding-top: 16px;
       border-top: 1px solid #e5e7eb;
     }
 
     .form-footer p {
-      font-size: 12px;
+      font-size: 13px;
       color: #6b7280;
       margin: 0;
     }
@@ -901,46 +818,44 @@ styles: [`
       width: 100%;
     }
 
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 900px) {
-      .page-container {
-        align-items: flex-start;
-        overflow-y: auto;
-      }
       .login-card {
         flex-direction: column;
-        max-width: 400px;
-        margin: auto 0;
+        height: auto;
+        min-height: 100vh;
       }
       .branding-panel {
         width: 100%;
-        padding: 20px;
+        padding: 28px 24px;
+      }
+      .tagline h2 {
+        font-size: 22px;
+        min-height: auto;
+      }
+      .features {
+        flex: none;
+        justify-content: flex-start;
       }
       .form-panel {
         width: 100%;
-        padding: 24px;
+        padding: 32px 24px;
       }
     }
 
     @media (max-width: 500px) {
-      .page-container {
-        padding: 12px;
-      }
-      .login-card {
-        max-width: 100%;
-        border-radius: 16px;
-      }
-      .branding-content {
-        padding: 16px;
-      }
-      .form-panel {
+      .branding-panel {
         padding: 20px 16px;
       }
+      .form-panel {
+        padding: 24px 16px;
+      }
       .tagline h2 {
-        font-size: 16px;
+        font-size: 19px;
       }
       .feature-item {
-        padding: 8px 12px;
-        font-size: 11px;
+        padding: 10px 12px;
+        font-size: 13px;
       }
     }
   `]
