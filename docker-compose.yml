@@ -22,7 +22,7 @@ services:
     volumes:
       - uploads_data:/app/uploads
     ports:
-      - "3000:3000"
+      - "3005:3000"
       
   frontend:
     build: ./frontend
