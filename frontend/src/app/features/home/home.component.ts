@@ -12,7 +12,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
             class="fixed top-3 right-4 z-[60] w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors bg-white/80 backdrop-blur-sm shadow-sm border border-slate-200"
             [title]="navVisible() ? 'Masquer le menu' : 'Afficher le menu'">
       @if (navVisible()) {
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
       } @else {
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
       }
@@ -20,17 +20,10 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
     <!-- Nav -->
     <nav [class.-translate-y-full]="!navVisible()"
-         class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 h-16 transition-transform duration-300 ease-in-out">
+         class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 h-14 transition-transform duration-300 ease-in-out">
       <div class="max-w-7xl mx-auto px-4 md:px-6 h-full flex items-center justify-between">
-        <a routerLink="/" class="flex items-center gap-2 md:gap-3 no-underline min-w-0">
-          <div class="logo-icon-home flex-shrink-0">
-            <span class="logo-letter-home">A</span>
-            <div class="logo-glow-home"></div>
-          </div>
-          <div class="min-w-0">
-            <div class="logo-text-home truncate">AVOCAT<span class="logo-accent-home">PRO</span></div>
-            <div class="logo-sub-home hidden sm:block">Cabinet Boussayene Knani</div>
-          </div>
+        <a routerLink="/" class="flex items-center no-underline">
+          <img src="assets/logo_auth.png" alt="AVOCAT-PRO" class="logo-img-home flex-shrink-0">
         </a>
         <div class="flex items-center gap-3 md:gap-4 flex-shrink-0">
           <div class="hidden md:flex items-center gap-6">
@@ -54,20 +47,6 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       <div class="absolute inset-0 bg-gradient-to-r from-lawyer-dark/70 via-lawyer-dark/50 to-lawyer-dark/30"></div>
       <div class="w-full px-6 pt-20 pb-16 relative z-10">
         <div class="max-w-3xl mx-auto text-center">
-          <div class="flex justify-center mb-5">
-            <div class="flex items-center gap-3">
-              <div class="logo-icon-home" style="width:44px;height:44px;border-radius:13px;">
-                <span class="logo-letter-home" style="font-size:20px;">A</span>
-                <div class="logo-glow-home" style="border-radius:15px;"></div>
-              </div>
-              <div class="text-left leading-tight">
-                <div style="font-family:Georgia,serif;font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">
-                  AVOCAT<span style="background:linear-gradient(135deg,#c6a052,#d4af37,#e6c65c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">PRO</span>
-                </div>
-                <div style="font-size:13px;color:rgba(255,255,255,0.6);">Cabinet Boussayene Knani</div>
-              </div>
-            </div>
-          </div>
           <h1 class="font-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.05] mb-6 tracking-tight">
             Conseil &amp;<br>Contentieux
           </h1>
@@ -165,14 +144,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
             <div class="grid grid-cols-2 gap-4 h-full">
               <!-- Brand -->
               <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 flex flex-col justify-center hover:border-lawyer-accent hover:shadow-lg hover:shadow-lawyer-accent/10 hover:bg-white/[0.07] transition-all duration-300">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-gradient-to-br from-lawyer-accent to-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span class="text-lawyer-dark font-serif font-bold">A</span>
-                  </div>
-                  <div>
-                    <div class="font-serif font-bold text-white text-base leading-tight">AVOCAT<span class="text-lawyer-accent">PRO</span></div>
-                    <p class="text-slate-400 text-xs leading-relaxed mt-0.5">Cabinet Boussayene Knani</p>
-                  </div>
+                <div>
+                  <div class="font-serif font-bold text-white text-base leading-tight">AVOCAT<span class="text-lawyer-accent">PRO</span></div>
+                  <p class="text-slate-400 text-xs leading-relaxed mt-0.5">Cabinet Boussayene Knani</p>
                 </div>
                 <p class="text-slate-500 text-xs mt-3 border-t border-white/5 pt-3">Conseil &amp; Contentieux</p>
               </div>
@@ -227,69 +201,19 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   styles: [`
     :host { display: block; width: 100%; min-height: 100vh; }
 
-    .logo-icon-home {
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(145deg, #c6a052 0%, #d4af37 50%, #e6c65c 100%);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 5px 15px rgba(198, 160, 82, 0.4), 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-      position: relative;
+    .logo-img-home {
+      height: 140px;
+      width: auto;
+      margin-top: 6px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 12px rgba(198, 160, 82, 0.35));
       animation: logoFloat 4s ease-in-out infinite;
       flex-shrink: 0;
-    }
-
-    .logo-letter-home {
-      font-family: Georgia, serif;
-      font-size: 20px;
-      font-weight: bold;
-      color: #1a365d;
-      z-index: 2;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    .logo-glow-home {
-      position: absolute;
-      inset: -4px;
-      background: linear-gradient(145deg, rgba(198, 160, 82, 0.4), transparent);
-      border-radius: 14px;
-      filter: blur(8px);
-      animation: glow 3s ease-in-out infinite;
     }
 
     @keyframes logoFloat {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-3px); }
-    }
-
-    @keyframes glow {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
-    }
-
-    .logo-text-home {
-      font-family: Georgia, serif;
-      font-size: 16px;
-      font-weight: 700;
-      color: #0d1b2a;
-      letter-spacing: -0.3px;
-      line-height: 1.3;
-    }
-
-    .logo-accent-home {
-      background: linear-gradient(135deg, #c6a052 0%, #d4af37 50%, #e6c65c 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .logo-sub-home {
-      font-size: 10px;
-      color: #94a3b8;
-      line-height: 1.3;
-      margin-top: 1px;
     }
 
     .video-ken-burns {

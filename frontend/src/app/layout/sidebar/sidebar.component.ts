@@ -21,19 +21,9 @@ import { LayoutService } from '../../core/services/layout.service';
            [class.justify-center]="collapsed()"
            [class.px-6]="!collapsed()">
         @if (!collapsed()) {
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-lawyer-primary to-lawyer-secondary rounded-lg flex items-center justify-center">
-              <span class="text-white font-serif font-bold text-lg">A</span>
-            </div>
-            <div>
-              <h1 class="font-serif font-bold text-lawyer-primary text-lg">AVOCAT</h1>
-              <span class="text-lawyer-accent text-xs font-medium tracking-wider">PRO</span>
-            </div>
-          </div>
+          <img src="assets/logo_auth.png" alt="AVOCAT-PRO" class="sidebar-logo">
         } @else {
-          <div class="w-10 h-10 bg-gradient-to-br from-lawyer-primary to-lawyer-secondary rounded-lg flex items-center justify-center">
-            <span class="text-white font-serif font-bold text-lg">A</span>
-          </div>
+          <img src="assets/logo_bous_icone.png" alt="AVOCAT-PRO" class="sidebar-logo sidebar-logo-collapsed">
         }
       </div>
 
@@ -194,6 +184,17 @@ import { LayoutService } from '../../core/services/layout.service';
   `,
   styles: [`
     .material-icons { font-size: 20px; }
+    .sidebar-logo {
+      height: 130px;
+      width: auto;
+      max-width: 100%;
+      object-fit: contain;
+    }
+    .sidebar-logo-collapsed {
+      height: 44px;
+      width: 44px;
+      object-fit: contain;
+    }
   `]
 })
 export class SidebarComponent {

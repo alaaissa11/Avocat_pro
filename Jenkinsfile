@@ -90,8 +90,8 @@ pipeline {
                         -u $DOCKER_USER \
                         --password-stdin
 
-                    docker tag avocat-backend:latest $DOCKER_USER/avocat-backend:latest
-                    docker tag avocat-frontend:latest $DOCKER_USER/avocat-frontend:latest
+                    docker tag localhost:8083/avocat-backend:1.0 $DOCKER_USER/avocat-backend:latest
+                    docker tag localhost:8083/avocat-frontend:1.0 $DOCKER_USER/avocat-frontend:latest
 
                     docker push $DOCKER_USER/avocat-backend:latest
                     docker push $DOCKER_USER/avocat-frontend:latest

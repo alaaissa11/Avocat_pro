@@ -1,193 +1,37 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
-
-@Component({
-  selector: 'app-login',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
-    <div class="page-container">
-      <div class="bg-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-        <div class="shape shape-4"></div>
-      </div>
-
-      <div class="login-card">
-        <!-- PANNEAU BRANDING -->
-        <div class="branding-panel">
-          <div class="brand-decoration"></div>
-          <div class="brand-decoration-2"></div>
-          <div class="branding-content">
-            <div class="logo-section">
-              <img src="assets/logo_auth.png" alt="AVOCAT-PRO" class="logo-img">
-            </div>
-
-            <div class="tagline">
-              <h2 class="typewriter">{{ displayText }}</h2>
-              <p>Solution numérique pour le suivi automatisé de vos dossiers avec traçabilité complète.</p>
-            </div>
-
-            <div class="features">
-              <div class="feature-item">
-                <div class="feature-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-                <span>Sécurité des données</span>
-              </div>
-              <div class="feature-item">
-                <div class="feature-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-                </div>
-                <span>Traçabilité complète</span>
-              </div>
-              <div class="feature-item">
-                <div class="feature-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <span>Collaboration optimisée</span>
-              </div>
-              <div class="feature-item">
-                <div class="feature-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m9 9 6 6 4-4"/></svg>
-                </div>
-                <span>Dossiers digitalisés</span>
-              </div>
-            </div>
-
-            <div class="branding-footer">
-              <p>© 2024 Cabinet Boussayene Knani</p>
-              <p class="footer-tagline">Excellence Juridique & Innovation</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- PANNEAU FORMULAIRE -->
-        <div class="form-panel">
-          <div class="form-decoration"></div>
-          <div class="form-content">
-            <div class="form-header">
-              <div class="form-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
-              </div>
-              <h2>Bienvenue</h2>
-              <p>Connectez-vous pour accéder à votre espace</p>
-            </div>
-
-            <form (ngSubmit)="onLogin()" class="login-form">
-              <div class="input-group">
-                <label>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                  Email professionnel
-                </label>
-                <input
-                  type="email"
-                  [(ngModel)]="email"
-                  name="email"
-                  placeholder="votre@email.com"
-                  class="input-field"
-                  required
-                >
-              </div>
-
-              <div class="input-group">
-                <label>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  Mot de passe
-                </label>
-                <div class="password-wrapper">
-                  <input
-                    [type]="showPassword() ? 'text' : 'password'"
-                    [(ngModel)]="password"
-                    name="password"
-                    placeholder="••••••••"
-                    class="input-field"
-                    required
-                  >
-                  <button type="button" class="toggle-password" (click)="togglePassword()">
-                    @if (showPassword()) {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    } @else {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
-                    }
-                  </button>
-                </div>
-              </div>
-
-              <div class="form-options">
-                <label class="remember-me">
-                  <input type="checkbox">
-                  <span class="checkmark"></span>
-                  Se souvenir de moi
-                </label>
-                <a routerLink="/forgot-password" class="forgot-password">Mot de passe oublié ?</a>
-              </div>
-
-              @if (error()) {
-                <div class="error-box">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-                  {{ error() }}
-                </div>
-              }
-
-              <button type="submit" [disabled]="loading()" class="login-btn">
-                @if (loading()) {
-                  <span class="spinner"></span>
-                  Connexion en cours...
-                } @else {
-                  <span>Se connecter</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                }
-              </button>
-            </form>
-
-            <div class="form-footer">
-              <p>Vous êtes un nouveau client ? <a href="#">Créer un compte</a></p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype - Page d'authentification AVOCAT-PRO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
-    :host {
-      display: block;
-      width: 100%;
-      min-height: 100vh;
-      position: static;
-      top: 0;
-      left: 0;
-      overflow: hidden;
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
     }
 
-    @media (max-width: 900px) {
-      :host {
-        position: static;
-        width: 100%;
-        height: auto;
-        min-height: 100vh;
-        overflow: hidden;
-      }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: #ffffff;
+      overflow: hidden;
     }
 
     /* ===== CONTENEUR ===== */
     .page-container {
-      width: 100%;
-      height: 100%;
+      height: 100vh;
       display: flex;
-      align-items: stretch;
+      align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      padding: 20px;
       position: relative;
       overflow: hidden;
     }
@@ -252,17 +96,19 @@ import { AuthService } from '../../../core/services/auth.service';
       75% { transform: translate(15px, 15px) scale(1.02) rotate(2deg); }
     }
 
-    /* ===== CARTE PLEINE PAGE ===== */
+    /* ===== CARTE D'AUTHENTIFICATION ===== */
     .login-card {
       position: relative;
       z-index: 1;
       display: flex;
       width: 100%;
-      max-width: 100%;
-      height: 100vh;
-      min-height: 100vh;
+      max-width: 900px;
+      max-height: calc(100vh - 40px);
       background: rgba(255, 255, 255, 0.97);
+      border-radius: 24px;
       overflow: hidden;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(198, 160, 82, 0.35);
       animation: cardAppear 0.5s ease-out;
     }
 
@@ -280,7 +126,7 @@ import { AuthService } from '../../../core/services/auth.service';
       flex-direction: column;
       position: relative;
       overflow: hidden;
-      padding: 4px 48px 20px;
+      padding: 28px 40px;
     }
 
     .brand-decoration {
@@ -320,11 +166,11 @@ import { AuthService } from '../../../core/services/auth.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 28px;
     }
 
     .logo-img {
-      height: 210px;
+      height: 50px;
       width: auto;
       max-width: 100%;
       object-fit: contain;
@@ -338,7 +184,7 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .tagline {
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     .tagline h2 {
@@ -347,8 +193,8 @@ import { AuthService } from '../../../core/services/auth.service';
       font-weight: 300;
       letter-spacing: 0.5px;
       margin: 0 0 6px 0;
-      line-height: 1.2;
-      min-height: 53px;
+      line-height: 1.25;
+      min-height: 55px;
       color: #1a365d;
     }
 
@@ -383,7 +229,7 @@ import { AuthService } from '../../../core/services/auth.service';
     .feature-item {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       font-size: 13px;
       color: #1e293b;
       padding: 8px 14px;
@@ -401,8 +247,8 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .feature-icon {
-      width: 34px;
-      height: 34px;
+      width: 30px;
+      height: 30px;
       background: linear-gradient(135deg, rgba(26, 54, 93, 0.1) 0%, rgba(26, 54, 93, 0.05) 100%);
       border-radius: 8px;
       display: flex;
@@ -413,12 +259,12 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .feature-icon svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
     }
 
     .branding-footer {
-      padding-top: 12px;
+      padding-top: 16px;
       border-top: 1px solid #e2e8f0;
       margin-top: auto;
     }
@@ -444,7 +290,7 @@ import { AuthService } from '../../../core/services/auth.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 40px;
+      padding: 28px 36px;
       background: linear-gradient(160deg, #1a365d 0%, #0d1b2a 60%, #1a365d 100%);
       position: relative;
       overflow: hidden;
@@ -468,33 +314,33 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .form-header {
-      margin-bottom: 28px;
+      margin-bottom: 20px;
       text-align: center;
     }
 
     .form-icon {
-      width: 56px;
-      height: 56px;
+      width: 48px;
+      height: 48px;
       background: linear-gradient(135deg, #c6a052 0%, #d4af37 50%, #e6c65c 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 14px;
+      margin: 0 auto 10px;
       color: #1a365d;
       box-shadow: 0 6px 20px rgba(198, 160, 82, 0.4);
     }
 
     .form-header h2 {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
       color: white;
-      margin: 0 0 8px 0;
+      margin: 0 0 6px 0;
       font-family: Georgia, serif;
     }
 
     .form-header p {
-      font-size: 14px;
+      font-size: 13px;
       color: rgba(255, 255, 255, 0.7);
       margin: 0;
     }
@@ -502,7 +348,7 @@ import { AuthService } from '../../../core/services/auth.service';
     .login-form {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
     .input-group {
@@ -549,7 +395,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
     .input-field {
       width: 100%;
-      padding: 13px 14px;
+      padding: 11px 14px;
       border: 2px solid rgba(255, 255, 255, 0.2);
       border-radius: 10px;
       font-size: 14px;
@@ -612,7 +458,7 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .remember-me input:checked + .checkmark::after {
-      content: '\\2713';
+      content: '\2713';
       color: #1a365d;
       font-size: 10px;
       font-weight: bold;
@@ -666,7 +512,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
     .login-btn {
       width: 100%;
-      padding: 14px 20px;
+      padding: 12px 20px;
       background: linear-gradient(135deg, #c6a052 0%, #d4af37 50%, #e6c65c 100%);
       color: #1a365d;
       border: none;
@@ -731,8 +577,8 @@ import { AuthService } from '../../../core/services/auth.service';
 
     .form-footer {
       text-align: center;
-      margin-top: 20px;
-      padding-top: 16px;
+      margin-top: 16px;
+      padding-top: 12px;
       border-top: 1px solid rgba(255, 255, 255, 0.15);
     }
 
@@ -774,7 +620,6 @@ import { AuthService } from '../../../core/services/auth.service';
       .login-card {
         flex-direction: column;
         height: auto;
-        min-height: 100vh;
       }
       .branding-panel {
         width: 100%;
@@ -809,77 +654,231 @@ import { AuthService } from '../../../core/services/auth.service';
         font-size: 13px;
       }
     }
-  `]
-})
-export class LoginComponent {
-  email = '';
-  password = '';
-  loading = signal(false);
-  error = signal('');
-  showPassword = signal(false);
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <div class="bg-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+      <div class="shape shape-4"></div>
+    </div>
 
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  text = "Gestion Juridique\nIntelligente";
-  displayText = "";
-  i = 0;
-  typing = true;
-  ngOnInit() {
-    this.loopTypewriter();
-  }
+    <div class="login-card">
+      <!-- PANNEAU BRANDING -->
+      <div class="branding-panel">
+        <div class="brand-decoration"></div>
+        <div class="brand-decoration-2"></div>
+        <div class="branding-content">
+          <div class="logo-section">
+            <img src="../frontend/src/assets/logo_avocat.png" alt="AVOCAT-PRO" class="logo-img">
+          </div>
 
-  loopTypewriter() {
-    if (this.typing) {
+          <div class="tagline">
+            <h2 class="typewriter" id="typewriter"></h2>
+            <p>Solution numérique pour le suivi automatisé de vos dossiers avec traçabilité complète.</p>
+          </div>
 
-      // phase écriture
-      if (this.i < this.text.length) {
-        this.displayText += this.text.charAt(this.i);
-        this.i++;
-        setTimeout(() => this.loopTypewriter(), 80);
-      } 
-      else {
-        // pause puis effacement
-        this.typing = false;
-        setTimeout(() => this.erase(), 1500);
+          <div class="features">
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <span>Sécurité des données</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <span>Traçabilité complète</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <span>Collaboration optimisée</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m9 9 6 6 4-4"/></svg>
+              </div>
+              <span>Dossiers digitalisés</span>
+            </div>
+          </div>
+
+          <div class="branding-footer">
+            <p>© 2024 Cabinet Boussayene Knani</p>
+            <p class="footer-tagline">Excellence Juridique &amp; Innovation</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANNEAU FORMULAIRE -->
+      <div class="form-panel">
+        <div class="form-decoration"></div>
+        <div class="form-content">
+          <div class="form-header">
+            <div class="form-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
+            </div>
+            <h2>Bienvenue</h2>
+            <p>Connectez-vous pour accéder à votre espace</p>
+          </div>
+
+          <form id="loginForm" class="login-form" novalidate>
+            <div class="input-group">
+              <label>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                Email professionnel
+              </label>
+              <input
+                type="email"
+                id="emailInput"
+                name="email"
+                placeholder="votre@email.com"
+                class="input-field"
+                required
+              >
+            </div>
+
+            <div class="input-group">
+              <label>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Mot de passe
+              </label>
+              <div class="password-wrapper">
+                <input
+                  type="password"
+                  id="passwordInput"
+                  name="password"
+                  placeholder="••••••••"
+                  class="input-field"
+                  required
+                >
+                <button type="button" class="toggle-password" id="togglePassword" title="Afficher/Masquer le mot de passe">
+                  <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-options">
+              <label class="remember-me">
+                <input type="checkbox">
+                <span class="checkmark"></span>
+                Se souvenir de moi
+              </label>
+              <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+            </div>
+
+            <div class="error-box" id="errorBox" style="display:none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+              <span id="errorText"></span>
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+              <span id="btnLabel">Se connecter</span>
+              <span id="btnSpinner" class="spinner" style="display:none"></span>
+              <svg id="btnArrow" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </form>
+
+          <div class="form-footer">
+            <p>Vous êtes un nouveau client ? <a href="#">Créer un compte</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Machine à écrire =====
+    const typewriterEl = document.getElementById('typewriter');
+    const text = "Gestion Juridique\nIntelligente";
+    let displayText = '';
+    let i = 0;
+    let typing = true;
+
+    function loopTypewriter() {
+      if (typing) {
+        if (i < text.length) {
+          displayText += text.charAt(i);
+          i++;
+          typewriterEl.textContent = displayText;
+          setTimeout(loopTypewriter, 80);
+        } else {
+          typing = false;
+          setTimeout(erase, 1500);
+        }
       }
     }
-  }
 
-  erase() {
-    if (this.displayText.length > 0) {
-      this.displayText = this.displayText.slice(0, -1);
-      setTimeout(() => this.erase(), 40);
-    } 
-    else {
-      // reset et recommencer
-      this.i = 0;
-      this.typing = true;
-      this.loopTypewriter();
-    }
-  }
-
-  togglePassword() {
-    this.showPassword.update(v => !v);
-  }
-
-  onLogin() {
-    if (!this.email || !this.password) {
-      this.error.set('Veuillez remplir tous les champs');
-      return;
-    }
-
-    this.loading.set(true);
-    this.error.set('');
-
-    this.authService.login(this.email, this.password).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.router.navigate(['/dashboard']);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.error.set(err.error?.message || 'Erreur de connexion');
+    function erase() {
+      if (displayText.length > 0) {
+        displayText = displayText.slice(0, -1);
+        typewriterEl.textContent = displayText;
+        setTimeout(erase, 40);
+      } else {
+        i = 0;
+        typing = true;
+        loopTypewriter();
       }
+    }
+
+    loopTypewriter();
+
+    // ===== Toggle mot de passe =====
+    const passwordInput = document.getElementById('passwordInput');
+    const togglePassword = document.getElementById('togglePassword');
+    const eyeOpen = document.getElementById('eyeOpen');
+    const eyeClosed = document.getElementById('eyeClosed');
+
+    togglePassword.addEventListener('click', () => {
+      const show = passwordInput.type === 'password';
+      passwordInput.type = show ? 'text' : 'password';
+      eyeOpen.style.display = show ? 'none' : 'block';
+      eyeClosed.style.display = show ? 'block' : 'none';
     });
-  }
-}
+
+    // ===== Simulation de connexion =====
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('emailInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const btnLabel = document.getElementById('btnLabel');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const btnArrow = document.getElementById('btnArrow');
+    const errorBox = document.getElementById('errorBox');
+    const errorText = document.getElementById('errorText');
+
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorBox.style.display = 'flex';
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      errorBox.style.display = 'none';
+
+      if (!emailInput.value || !passwordInput.value) {
+        showError('Veuillez remplir tous les champs');
+        return;
+      }
+
+      loginBtn.disabled = true;
+      btnLabel.textContent = 'Connexion en cours...';
+      btnSpinner.style.display = 'block';
+      btnArrow.style.display = 'none';
+
+      // Simulation d'une requête (prototype : pas de vrai backend)
+      setTimeout(() => {
+        loginBtn.disabled = false;
+        btnLabel.textContent = 'Se connecter';
+        btnSpinner.style.display = 'none';
+        btnArrow.style.display = 'block';
+        showError('Erreur de connexion');
+      }, 1500);
+    });
+  </script>
+</body>
+</html>
